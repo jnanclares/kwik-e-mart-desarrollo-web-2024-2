@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react';
+import { useRouter, usePathname} from 'next/navigation';
 import { Navbar } from '../components/Navbar';
 import { Hero } from '../components/Hero';
 import { FeaturedProducts } from '../components/FeaturedProducts';
@@ -12,18 +13,23 @@ import { UserProfile } from '../components/UserProfile';
 import { CheckoutPage } from '../components/Checkout/CheckoutPage';
 import { CartProvider } from '../context/CartContext';
 import { AuthProvider } from '../context/AuthContext';
+import Dashboard from '../components/Administration/Dashboard';
 
 function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState<'home' | 'checkout'>('home');
+  const router = useRouter();
+  const pathname = usePathname();
 
   return (
     <AuthProvider>
       <CartProvider>
         <div className="min-h-screen bg-gray-50">
-          <Navbar onAuthClick={() => setIsAuthModalOpen(true)} />
+          <Navbar onAuthClick={() => setIsAuthModalOpen(true)}/>
           <main>
-            {currentPage === 'home' ? (
+          {pathname === '/admin' ? (
+              <Dashboard />
+            ) : currentPage === 'home' ? (
               <>
                 <Hero />
                 <FeaturedProducts />

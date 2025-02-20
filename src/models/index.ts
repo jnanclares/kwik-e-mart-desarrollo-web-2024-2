@@ -35,3 +35,24 @@ export interface AuthState {
   isLoading: boolean;
   error: string | null;
 }
+
+export interface Sale {
+  id: string;
+  userId: string;
+  products: Array<{
+    productId: string;
+    quantity: number;
+    price: number;
+  }>;
+  total: number;
+  date: Date;
+}
+
+export interface Offer {
+  id: string;
+  productId: string;
+  discountPercentage: number;
+  startDate: Date;
+  endDate: Date;
+  active: boolean;
+}

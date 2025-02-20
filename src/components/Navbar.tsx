@@ -1,7 +1,8 @@
 import React from 'react';
-import { ShoppingCart, User, Store } from 'lucide-react';
+import { ShoppingCart, User, Store, LayoutDashboard } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 interface NavbarProps {
   onAuthClick: () => void;
@@ -11,6 +12,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onAuthClick }) => {
   const { state: cartState, dispatch: cartDispatch } = useCart();
   const { state: authState } = useAuth();
   const itemCount = cartState.items.reduce((acc, item) => acc + item.quantity, 0);
+  const router = useRouter();
 
   return (
     <nav className="bg-[#2D7337] text-white sticky top-0 z-50 shadow-lg">
@@ -22,6 +24,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onAuthClick }) => {
           </div>
           
           <div className="flex items-center space-x-4">
+        
+            <button
+              className="hover:text-[#FED41D] transition-colors flex items-center gap-2"
+              onClick={() => router.push('/admin')}
+              >
+                <LayoutDashboard className="h-6 w-6" />
+                <span className="hidden md:inline">Admin</span>
+            </button>
             <button 
               className="hover:text-[#FED41D] transition-colors flex items-center gap-2"
               onClick={onAuthClick}

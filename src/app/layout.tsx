@@ -1,5 +1,5 @@
 import '../index.css'
-
+import Sidebar from '../components/Administration/Sidebar';
 
 export const metadata = {
   title: 'Next.js',
