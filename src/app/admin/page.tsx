@@ -2,11 +2,9 @@
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../context/AuthContext';
 import Dashboard from '../../components/Administration/Dashboard';
 
 const AdminPage: React.FC = () => {
-  const { state: authState } = useAuth();
   const router = useRouter();
 
   return (

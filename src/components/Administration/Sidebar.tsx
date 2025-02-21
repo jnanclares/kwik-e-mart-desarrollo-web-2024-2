@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, 
   ShoppingCart, 
@@ -21,7 +24,7 @@ const menuItems = [
 ];
 
 export default function Sidebar() {
-  const location = useLocation();
+  const pathname = usePathname();
 
   return (
     <div className="bg-yellow-500 text-white w-64 min-h-screen p-4">
@@ -32,11 +35,11 @@ export default function Sidebar() {
       <nav>
         {menuItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path;
+          const isActive = pathname === item.path;
           return (
             <Link
               key={item.path}
-              to={item.path}
+              href={item.path} // Se usa href en lugar de to
               className={`flex items-center gap-2 p-3 rounded-lg mb-2 transition-colors ${
                 isActive 
                   ? 'bg-yellow-600' 
