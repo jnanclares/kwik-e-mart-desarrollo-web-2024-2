@@ -6,7 +6,7 @@ interface CartState {
   isOpen: boolean;
 }
 
-type CartAction =
+export type CartAction =
   | { type: 'ADD_ITEM'; payload: Product }
   | { type: 'REMOVE_ITEM'; payload: string }
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
@@ -17,6 +17,7 @@ const initialState: CartState = {
   items: [],
   isOpen: false,
 };
+
 
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
