@@ -18,6 +18,12 @@ export interface Product {
   category: string;
   onSale: boolean;
   salePrice: number;
+  image: string;
+  rating: number;
+  reviews: number;
+  description: string;
+  featured?: boolean;
+  dailyDeal?: boolean;
 }
 
 export interface Offer {
