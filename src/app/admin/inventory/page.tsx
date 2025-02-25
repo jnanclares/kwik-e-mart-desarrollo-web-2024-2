@@ -1,5 +1,4 @@
 'use client';
-import { getProducts } from '@/services/getProducts';
 import InventoryStats from '@/components/Administration/InventoryStats';
 import ProductsTable from '@/components/Administration/ProductsTable';
 import CategoryDistribution from '@/components/Administration/CategoryDistribution';

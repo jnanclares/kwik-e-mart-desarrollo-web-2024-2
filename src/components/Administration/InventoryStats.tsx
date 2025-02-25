@@ -55,9 +55,11 @@ export default function InventoryStats() {
       };
   const totalProducts = products.length;
   const featuredProducts = products.filter(p => p.featured).length;
-  const averageRating = (
-    products.reduce((acc, p) => acc + p.rating, 0) / products.length
-  ).toFixed(1);
+  const validRatings = products.filter(p => p.rating !== undefined && p.rating !== null);
+
+  const averageRating = validRatings.length > 0
+    ? (validRatings.reduce((acc, p) => acc + p.rating, 0) / validRatings.length).toFixed(1)
+    : '0.0';
   const onSaleProducts = products.filter(p => p.onSale).length;
 
   return (
