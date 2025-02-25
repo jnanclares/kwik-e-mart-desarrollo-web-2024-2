@@ -8,27 +8,22 @@ import { DailyDeals } from '../components/DailyDeals';
 import { ProductCatalog } from '../components/ProductCatalog';
 import { Cart } from '../components/Cart';
 import { AuthModal } from '../components/Auth/AuthModal';
-import { UserProfile } from '../components/UserProfile';
 import { CheckoutPage } from '../components/Checkout/CheckoutPage';
-import { CartProvider } from '../context/CartContext';
-import { AuthProvider } from '../context/AuthContext';
-import { resetProducts } from '../services/updateProducts'; // 🔹 Reinicia productos
-import { applyDailyDeals } from '../services/updateDailyDeals'; // 🔹 Aplica descuentos
+import { resetProducts } from '../services/updateProducts'; // Opcional, si lo vuelves a necesitar
+import { applyDailyDeals } from '../services/updateDailyDeals';
 
 function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState<'home' | 'checkout'>('home');
 
-  // 🔹 Ejecutar la actualización de productos y descuentos al cargar la página
+  // Ejecutar la actualización de productos y descuentos al cargar la página
   useEffect(() => {
     const updateProductsAndDeals = async () => {
       try {
-        // console.log("🔄 Reseteando productos...");
-        // await resetProducts(); // 
-        // console.log("✅ Productos reseteados.");
-
+        // Puedes descomentar si deseas reiniciar productos:
+        // await resetProducts();
         console.log("🔄 Aplicando descuentos...");
-        await applyDailyDeals(); // 
+        await applyDailyDeals();
         console.log("✅ Descuentos aplicados según el día de la semana.");
       } catch (error) {
         console.error("⚠️ Error al actualizar productos o descuentos:", error);
@@ -36,30 +31,26 @@ function App() {
     };
 
     updateProductsAndDeals();
-  }, []); // 🔹 Se ejecuta solo una vez al cargar la página
+  }, []);
 
   return (
-    <AuthProvider>
-      <CartProvider>
-        <div className="min-h-screen bg-gray-50">
-          <Navbar onAuthClick={() => setIsAuthModalOpen(true)} />
-          <main>
-            {currentPage === 'home' ? (
-              <>
-                <Hero />
-                <DailyDeals />
-                <FeaturedProducts />
-                <ProductCatalog />
-              </>
-            ) : (
-              <CheckoutPage />
-            )}
-          </main>
-          <Cart />
-          <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
-        </div>
-      </CartProvider>
-    </AuthProvider>
+    <div className="min-h-screen bg-gray-50">
+      <Navbar onAuthClick={() => setIsAuthModalOpen(true)} />
+      <main>
+        {currentPage === 'home' ? (
+          <>
+            <Hero />
+            <DailyDeals />
+            <FeaturedProducts />
+            <ProductCatalog />
+          </>
+        ) : (
+          <CheckoutPage />
+        )}
+      </main>
+      <Cart />
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+    </div>
   );
 }
 

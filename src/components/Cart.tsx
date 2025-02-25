@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import Link from 'next/link';
 
 export const Cart = () => {
   const { state, dispatch } = useCart();
@@ -105,13 +106,13 @@ export const Cart = () => {
                   </button>
 
                   {/* Botón de Finalizar Compra */}
-                  <a
+                  <Link
                     href="/checkout"
                     onClick={() => dispatch({ type: 'TOGGLE_CART' })}
                     className="px-6 py-2 bg-[#2D7337] text-white rounded-lg hover:bg-[#236129] transition inline-block text-center"
                   >
                     Proceed to Checkout
-                  </a>
+                  </Link>
                 </div>
               </div>
             </>
