@@ -1,3 +1,5 @@
+'use client';  // 👈 1ª línea obligatoria para un Client Component
+
 import React, { useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
