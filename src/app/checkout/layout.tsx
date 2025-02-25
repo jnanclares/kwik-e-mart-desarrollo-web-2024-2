@@ -1,14 +1,5 @@
-'use client';
-
-import { CartProvider } from '@/context/CartContext';
-import { AuthProvider } from '@/context/AuthContext';
-
+// src/app/checkout/layout.tsx
 export default function CheckoutLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <AuthProvider>
-      <CartProvider>
-        {children}
-      </CartProvider>
-    </AuthProvider>
-  );
-}
+    return <div className="checkout-layout">{children}</div>;
+  }
+  
