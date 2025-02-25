@@ -1,5 +1,4 @@
-'use client';  // 👈 1ª línea obligatoria para un Client Component
-
+'use client';
 import React, { useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -49,18 +48,59 @@ export const CheckoutPage = () => {
 
   const handleShippingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Verificar que todos los campos estén completos
     if (!shippingDetails.address || !shippingDetails.city || !shippingDetails.state || !shippingDetails.zipCode) {
-      setError('Please fill in all shipping details');
+      setError('Por favor completa todos los campos de envío');
+      return;
+    }
+    // Validar que el código postal tenga 5 o 6 dígitos
+    const zipCodeRegex = /^\d{5,6}$/;
+    if (!zipCodeRegex.test(shippingDetails.zipCode)) {
+      setError('El código postal es inválido. Debe contener 5 o 6 dígitos.');
       return;
     }
     setError(null);
     setStep('payment');
   };
 
+  // Función de validación para el formulario de pago
+  const validatePaymentDetails = () => {
+    const { cardNumber, expiryDate, cvv, nameOnCard } = paymentDetails;
+    const sanitizedCardNumber = cardNumber.replace(/\s+/g, '');
+    const cardRegex = /^[0-9]{13,19}$/;
+    const expiryRegex = /^(0[1-9]|1[0-2])\/\d{2}$/;
+    const cvvRegex = /^\d{3,4}$/;
+
+    if (!cardRegex.test(sanitizedCardNumber)) {
+      return 'El número de tarjeta es inválido.';
+    }
+    if (!expiryRegex.test(expiryDate)) {
+      return 'La fecha de expiración debe tener el formato MM/YY.';
+    }
+    // Validar que la fecha de expiración sea en el futuro
+    const [month, year] = expiryDate.split('/');
+    const currentDate = new Date();
+    const expiry = new Date(Number(`20${year}`), Number(month) - 1, 1);
+    // Establecer la fecha al último día del mes de expiración
+    expiry.setMonth(expiry.getMonth() + 1);
+    expiry.setDate(0);
+    if (expiry < currentDate) {
+      return 'La tarjeta está expirada.';
+    }
+    if (!cvvRegex.test(cvv)) {
+      return 'El CVV es inválido.';
+    }
+    if (!nameOnCard.trim()) {
+      return 'El nombre en la tarjeta no puede estar vacío.';
+    }
+    return null;
+  };
+
   const handlePaymentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!paymentDetails.cardNumber || !paymentDetails.expiryDate || !paymentDetails.cvv || !paymentDetails.nameOnCard) {
-      setError('Please fill in all payment details');
+    const validationError = validatePaymentDetails();
+    if (validationError) {
+      setError(validationError);
       return;
     }
     setError(null);
@@ -69,7 +109,7 @@ export const CheckoutPage = () => {
 
   const processOrder = () => {
     try {
-      // Update user's purchase history
+      // Actualizar el historial de compras del usuario si está autenticado
       if (authState.user) {
         const newPurchase = {
           date: new Date().toISOString(),
@@ -85,11 +125,11 @@ export const CheckoutPage = () => {
         authDispatch({ type: 'UPDATE_USER', payload: updatedUser });
       }
 
-      // Clear cart and show confirmation
+      // Limpiar el carrito y mostrar la confirmación
       cartDispatch({ type: 'CLEAR_CART' });
       setStep('confirmation');
     } catch (err) {
-      setError('There was an error processing your order. Please try again.');
+      setError('Ocurrió un error al procesar tu orden. Por favor, intenta nuevamente.');
     }
   };
 
@@ -98,8 +138,8 @@ export const CheckoutPage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center">
           <ShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
-          <h2 className="mt-2 text-lg font-medium text-gray-900">Your cart is empty</h2>
-          <p className="mt-1 text-sm text-gray-500">Start adding some items to your cart</p>
+          <h2 className="mt-2 text-lg font-medium text-gray-900">Tu carrito está vacío</h2>
+          <p className="mt-1 text-sm text-gray-500">Agrega algunos productos para continuar</p>
         </div>
       </div>
     );
@@ -120,11 +160,11 @@ export const CheckoutPage = () => {
             <div className="bg-white p-6 rounded-lg shadow-md">
               <div className="flex items-center gap-2 mb-6">
                 <Truck className="h-6 w-6 text-[#2D7337]" />
-                <h2 className="text-2xl font-bold">Shipping Details</h2>
+                <h2 className="text-2xl font-bold">Detalles de Envío</h2>
               </div>
               <form onSubmit={handleShippingSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Address</label>
+                  <label className="block text-sm font-medium text-gray-700">Dirección</label>
                   <input
                     type="text"
                     value={shippingDetails.address}
@@ -134,7 +174,7 @@ export const CheckoutPage = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">City</label>
+                    <label className="block text-sm font-medium text-gray-700">Ciudad</label>
                     <input
                       type="text"
                       value={shippingDetails.city}
@@ -143,7 +183,7 @@ export const CheckoutPage = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">State</label>
+                    <label className="block text-sm font-medium text-gray-700">Estado</label>
                     <input
                       type="text"
                       value={shippingDetails.state}
@@ -153,19 +193,20 @@ export const CheckoutPage = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">ZIP Code</label>
+                  <label className="block text-sm font-medium text-gray-700">Código Postal</label>
                   <input
                     type="text"
                     value={shippingDetails.zipCode}
                     onChange={(e) => setShippingDetails({ ...shippingDetails, zipCode: e.target.value })}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#2D7337] focus:ring focus:ring-[#2D7337] focus:ring-opacity-50"
+                    placeholder="Ej: 28013 o 280130"
                   />
                 </div>
                 <button
                   type="submit"
                   className="w-full bg-[#2D7337] text-white py-3 rounded-lg hover:bg-[#236129] transition-colors"
                 >
-                  Continue to Payment
+                  Continuar a Pago
                 </button>
               </form>
             </div>
@@ -175,11 +216,11 @@ export const CheckoutPage = () => {
             <div className="bg-white p-6 rounded-lg shadow-md">
               <div className="flex items-center gap-2 mb-6">
                 <CreditCard className="h-6 w-6 text-[#2D7337]" />
-                <h2 className="text-2xl font-bold">Payment Details</h2>
+                <h2 className="text-2xl font-bold">Detalles de Pago</h2>
               </div>
               <form onSubmit={handlePaymentSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Name on Card</label>
+                  <label className="block text-sm font-medium text-gray-700">Nombre en la Tarjeta</label>
                   <input
                     type="text"
                     value={paymentDetails.nameOnCard}
@@ -188,7 +229,7 @@ export const CheckoutPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Card Number</label>
+                  <label className="block text-sm font-medium text-gray-700">Número de Tarjeta</label>
                   <input
                     type="text"
                     value={paymentDetails.cardNumber}
@@ -199,7 +240,7 @@ export const CheckoutPage = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Expiry Date</label>
+                    <label className="block text-sm font-medium text-gray-700">Fecha de Expiración</label>
                     <input
                       type="text"
                       value={paymentDetails.expiryDate}
@@ -219,12 +260,21 @@ export const CheckoutPage = () => {
                     />
                   </div>
                 </div>
-                <button
-                  type="submit"
-                  className="w-full bg-[#2D7337] text-white py-3 rounded-lg hover:bg-[#236129] transition-colors"
-                >
-                  Place Order
-                </button>
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setStep('shipping')}
+                    className="w-full bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 transition-colors"
+                  >
+                    Volver
+                  </button>
+                  <button
+                    type="submit"
+                    className="w-full bg-[#2D7337] text-white py-3 rounded-lg hover:bg-[#236129] transition-colors"
+                  >
+                    Realizar Pedido
+                  </button>
+                </div>
               </form>
             </div>
           )}
@@ -236,15 +286,15 @@ export const CheckoutPage = () => {
                   <ShoppingBag className="h-8 w-8 text-[#2D7337]" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold mb-4">Thank you, come again!</h2>
+              <h2 className="text-2xl font-bold mb-4">¡Gracias por tu compra!</h2>
               <p className="text-gray-600 mb-6">
-                Your order has been successfully placed. You will receive a confirmation email shortly.
+                Tu pedido ha sido procesado correctamente. Recibirás un correo de confirmación.
               </p>
               <button
                 onClick={() => window.location.href = '/'}
                 className="bg-[#2D7337] text-white py-3 px-6 rounded-lg hover:bg-[#236129] transition-colors"
               >
-                Continue Shopping
+                Continuar Comprando
               </button>
             </div>
           )}
@@ -253,13 +303,13 @@ export const CheckoutPage = () => {
         {step !== 'confirmation' && (
           <div className="lg:w-96">
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-bold mb-4">Order Summary</h3>
+              <h3 className="text-lg font-bold mb-4">Resumen del Pedido</h3>
               <div className="space-y-4 mb-6">
                 {cartState.items.map((item) => (
                   <div key={item.id} className="flex justify-between">
                     <div>
                       <span className="font-medium">{item.name}</span>
-                      <span className="text-gray-500 block text-sm">Qty: {item.quantity}</span>
+                      <span className="text-gray-500 block text-sm">Cant: {item.quantity}</span>
                     </div>
                     <span>${((item.salePrice || item.price) * item.quantity).toFixed(2)}</span>
                   </div>
@@ -271,11 +321,11 @@ export const CheckoutPage = () => {
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping</span>
+                  <span className="text-gray-600">Envío</span>
                   <span>${shipping.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Tax</span>
+                  <span className="text-gray-600">Impuestos</span>
                   <span>${tax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg pt-2 border-t">
