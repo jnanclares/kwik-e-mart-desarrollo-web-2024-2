@@ -1,5 +1,8 @@
 'use client';
 import React, { useState } from 'react';
+import { doc, updateDoc, arrayUnion } from "firebase/firestore";
+import { db } from "../../lib/firebaseConfig"; // Adjust if needed
+
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -11,6 +14,8 @@ import {
   Minus,
   Trash2,
 } from 'lucide-react';
+
+
 
 interface ShippingDetails {
   address: string;
@@ -66,7 +71,7 @@ const Invoice: React.FC<{ order: OrderDetails }> = ({ order }) => {
               <tr key={item.id}>
                 <td className="py-2">{item.name}</td>
                 <td className="py-2 text-right">{item.quantity}</td>
-                <td className="py-2 text-right">${effectivePrice.toFixed(2)}</td>
+                <td className="py-2 text-right">${Number(effectivePrice).toFixed(2)}</td>
                 <td className="py-2 text-right">
                   ${(effectivePrice * item.quantity).toFixed(2)}
                 </td>
@@ -96,6 +101,13 @@ export const CheckoutPage = () => {
   const [step, setStep] = useState<'shipping' | 'payment' | 'confirmation'>('shipping');
   const [error, setError] = useState<string | null>(null);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  const [reviewProductId, setReviewProductId] = useState<string | null>(null);
+  const [rating, setRating] = useState<number>(5);
+  const [comment, setComment] = useState("");
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+
+  
+
 
   const [shippingDetails, setShippingDetails] = useState<ShippingDetails>({
     address: '',
@@ -112,6 +124,44 @@ export const CheckoutPage = () => {
   });
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
+
+  // Enviar review
+  const handleSubmitReview = async () => {
+    if (!reviewProductId || !comment.trim()) {
+      alert("Por favor selecciona un producto y escribe una reseña.");
+      return;
+    }
+  
+    if (!authState.user) {
+      alert("Debes iniciar sesión para dejar una reseña.");
+      return;
+    }
+  
+    const newReview = {
+      userId: authState.user.id,
+      username: authState.user.name,
+      rating,
+      comment,
+      date: new Date().toISOString(),
+    };
+  
+    try {
+      const productRef = doc(db, "products", reviewProductId);
+      await updateDoc(productRef, {
+        reviews: arrayUnion(newReview), // Adds review to product reviews array
+      });
+  
+      setReviewSubmitted(true);
+      setReviewProductId(null);
+      setComment("");
+      setRating(5);
+      alert("Reseña enviada con éxito!");
+    } catch (error) {
+      console.error("Error al enviar reseña:", error);
+      alert("Hubo un error al enviar tu reseña. Inténtalo de nuevo.");
+    }
+  };
+
 
   // Se calcula el subtotal usando el precio efectivo (salePrice si aplica)
   const subtotal = cartState.items.reduce(
@@ -493,12 +543,59 @@ export const CheckoutPage = () => {
               </p>
               {/* Se muestra la factura de la compra */}
               <Invoice order={orderDetails} />
-              <button
-                onClick={() => (window.location.href = '/')}
-                className="mt-6 bg-[#2D7337] text-white py-3 px-6 rounded-lg hover:bg-[#236129] transition-colors"
-              >
-                Continuar Comprando
-              </button>
+              {/* Dejar review */}
+                  {!reviewSubmitted ? (
+                    <div className="mt-6 bg-gray-100 p-4 rounded-lg shadow-md">
+                      <h3 className="text-lg font-bold mb-2">¿Qué te pareció tu compra?</h3>
+                      <p className="text-gray-600">Deja una reseña sobre los productos que compraste.</p>
+
+                      {/* Seleccionar Producto */}
+                      <select
+                        className="mt-2 w-full border p-2 rounded-lg"
+                        onChange={(e) => setReviewProductId(e.target.value)}
+                        value={reviewProductId || ""}
+                      >
+                        <option value="">Selecciona un producto</option>
+                        {orderDetails.items.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </select>
+
+                      {/* Star Rating */}
+                      <div className="flex mt-4 space-x-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() => setRating(star)}
+                            className={`text-2xl ${star <= rating ? "text-yellow-500" : "text-gray-300"}`}
+                          >
+                            ★
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Comentario */}
+                      <textarea
+                        className="w-full mt-3 p-2 border rounded-lg"
+                        placeholder="Escribe tu opinión aquí..."
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                      />
+
+                      {/* Enviar review */}
+                      <button
+                        onClick={handleSubmitReview}
+                        className="mt-3 bg-[#2D7337] text-white py-2 px-4 rounded-lg hover:bg-[#236129] transition-colors"
+                      >
+                        Enviar Reseña
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="mt-6 text-green-600 font-bold">¡Gracias por tu reseña!</p>
+                  )}
+
             </div>
           )}
         </div>
@@ -509,9 +606,9 @@ export const CheckoutPage = () => {
               <h3 className="text-lg font-bold mb-4">Resumen del Pedido</h3>
               <div className="space-y-4 mb-6">
                 {cartState.items.map((item) => {
-                  const hasDiscount = item.salePrice && item.salePrice < item.price;
-                  const originalPrice = item.price;
-                  const discountedPrice = hasDiscount ? item.salePrice : item.price;
+                  const hasDiscount = item.salePrice !== undefined && item.salePrice < item.price;
+                  const originalPrice = Number(item.price);
+                  const discountedPrice = hasDiscount ? Number(item.salePrice) : originalPrice;
                   return (
                     <div key={item.id} className="flex justify-between items-center">
                       <div>
@@ -567,7 +664,7 @@ export const CheckoutPage = () => {
                           </>
                         ) : (
                           <span className="text-gray-700 block text-sm">
-                            ${originalPrice.toFixed(2)}
+                            ${Number(originalPrice).toFixed(2)}
                           </span>
                         )}
                       </div>

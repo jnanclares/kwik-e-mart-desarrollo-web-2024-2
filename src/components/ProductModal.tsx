@@ -76,7 +76,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                   }`}
                 />
               ))}
-              <span className="text-sm text-gray-600">({product.reviews} opiniones)</span>
+                <span className="text-sm text-gray-600">
+                  ({product.reviews.length} {product.reviews.length === 1 ? "review" : "reviews"})
+                </span>
             </div>
 
             {/* Precio */}
@@ -87,11 +89,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
                     ${product.salePrice?.toFixed(2)}
                   </span>
                   <span className="text-gray-500 line-through text-lg">
-                    ${product.price.toFixed(2)}
+                    ${Number(product.price).toFixed(2)}
                   </span>
                 </div>
               ) : (
-                <span className="font-bold text-xl">${product.price.toFixed(2)}</span>
+                <span className="font-bold text-xl">${Number(product.price).toFixed(2)}</span>
               )}
             </div>
 
