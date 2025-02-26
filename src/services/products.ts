@@ -17,7 +17,7 @@ export const fetchProducts = async (): Promise<Product[]> => {
       category: data.category || "uncategorized",
       image: data.image || "",
       rating: data.rating || 0,
-      reviews: data.reviews || 0,
+      reviews: data.reviews,
       description: data.description || "No description available",
       featured: data.featured ?? false,
     };
