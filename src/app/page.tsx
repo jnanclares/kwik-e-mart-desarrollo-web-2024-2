@@ -10,12 +10,9 @@ import { ProductCatalog } from '../components/ProductCatalog';
 import { Cart } from '../components/Cart';
 import { AuthModal } from '../components/Auth/AuthModal';
 import { CheckoutPage } from '../components/Checkout/CheckoutPage';
-import { resetProducts } from '../services/updateProducts'; 
 import { applyDailyDeals } from '../services/updateDailyDeals';
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
-import { db } from "../lib/firebaseConfig";
-import { CartProvider } from '../context/CartContext';
-import { AuthProvider } from '../context/AuthContext';
+import { db } from "../firebase/firebaseConfig";
 import Dashboard from '../components/Administration/Dashboard';
 
 function App() {

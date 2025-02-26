@@ -1,5 +1,5 @@
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
-import { db } from "../lib/firebaseConfig";
+import { db } from "../firebase/firebaseConfig";
 
 export const migrateReviews = async () => {
   try {

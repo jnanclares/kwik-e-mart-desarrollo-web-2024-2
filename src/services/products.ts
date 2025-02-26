@@ -1,5 +1,5 @@
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "../lib/firebaseConfig";
+import { db } from "../firebase/firebaseConfig";
 import { Product } from "../models";
 
 export const fetchProducts = async (): Promise<Product[]> => {

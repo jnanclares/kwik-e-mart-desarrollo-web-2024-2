@@ -1,4 +1,4 @@
-import { db } from '@/lib/firebaseConfig';
+import { db } from '@/firebase/firebaseConfig';
 import { collection, getDocs } from 'firebase/firestore';
 import { Product } from '@/models';
 
