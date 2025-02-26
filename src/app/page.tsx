@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter, usePathname} from 'next/navigation';
 import { Navbar } from '../components/Navbar';
 import { Hero } from '../components/Hero';
 import { FeaturedProducts } from '../components/FeaturedProducts';
@@ -9,10 +10,10 @@ import { ProductCatalog } from '../components/ProductCatalog';
 import { Cart } from '../components/Cart';
 import { AuthModal } from '../components/Auth/AuthModal';
 import { CheckoutPage } from '../components/Checkout/CheckoutPage';
-import { resetProducts } from '../services/updateProducts'; 
 import { applyDailyDeals } from '../services/updateDailyDeals';
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
-import { db } from "../lib/firebaseConfig";
+import { db } from "../firebase/firebaseConfig";
+import Dashboard from '../components/Administration/Dashboard';
 
 function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -73,12 +74,16 @@ function App() {
 
     updateProductsAndDeals();
   }, []);
+  const router = useRouter();
+  const pathname = usePathname();
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar onAuthClick={() => setIsAuthModalOpen(true)} />
+      <Navbar onAuthClick={() => setIsAuthModalOpen(true)}/>
       <main>
-        {currentPage === 'home' ? (
+          {pathname === '/admin' ? (
+              <Dashboard />
+        ) : currentPage === 'home' ? (
           <>
             <Hero />
             <DailyDeals />

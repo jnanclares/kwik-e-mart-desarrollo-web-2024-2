@@ -1,5 +1,5 @@
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
-import { db } from "../lib/firebaseConfig";
+import { db } from "../firebase/firebaseConfig";
 import { Product } from "../models";
 
 // 🔹 Función para establecer `onSale: false` y `salePrice: null` en todos los productos

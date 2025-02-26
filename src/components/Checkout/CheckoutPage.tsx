@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { doc, updateDoc, arrayUnion } from "firebase/firestore";
-import { db } from "../../lib/firebaseConfig"; // Adjust if needed
+import { db } from "../../firebase/firebaseConfig"; // Adjust if needed
 
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';

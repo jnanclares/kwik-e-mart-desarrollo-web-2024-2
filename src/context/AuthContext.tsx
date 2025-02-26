@@ -1,5 +1,11 @@
-import React, { createContext, useContext, useReducer } from 'react';
-import { User, AuthState } from '../models';
+// src/context/AuthContext.tsx
+
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { AuthState } from '../models/auth';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../firebase/firebaseConfig';
+import { getUserData } from '../services/authService';
+import { User } from '@/models/user';
 
 type AuthAction =
   | { type: 'LOGIN_START' }
@@ -62,6 +68,39 @@ const AuthContext = createContext<{
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
+
+  // Check authentication state on load
+  useEffect(() => {
+    // Only execute on the client
+    if (typeof window !== 'undefined') {
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser) {
+          // User is authenticated, get additional data
+          const { userData } = await getUserData(firebaseUser.uid);
+          
+          if (userData) {
+            // Update state with user information
+            dispatch({
+              type: 'LOGIN_SUCCESS',
+              payload: {
+                id: firebaseUser.uid,
+                name: userData.displayName || firebaseUser.displayName || 'User',
+                email: firebaseUser.email || '',
+                role: userData.role || 'user',
+                purchaseHistory: [],
+              }
+            });
+          }
+        } else {
+          // User is not authenticated
+          dispatch({ type: 'LOGOUT' });
+        }
+      });
+
+      // Clean up subscription on unmount
+      return () => unsubscribe();
+    }
+  }, []);
 
   return (
     <AuthContext.Provider value={{ state, dispatch }}>

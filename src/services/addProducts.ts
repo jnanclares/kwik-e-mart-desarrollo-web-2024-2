@@ -1,5 +1,5 @@
 import { collection, addDoc } from "firebase/firestore";
-import { db } from "../lib/firebaseConfig";
+import { db } from "../firebase/firebaseConfig";
 
 const products = [
     {
