@@ -1,17 +1,17 @@
-import React, { createContext, useContext, useReducer } from 'react';
-import { CartItem, Product } from '../models';
+import React, { createContext, useEffect, useContext, useReducer } from "react";
+import { CartItem, Product } from "../models";
 
 interface CartState {
   items: CartItem[];
   isOpen: boolean;
 }
 
-type CartAction =
-  | { type: 'ADD_ITEM'; payload: Product }
-  | { type: 'REMOVE_ITEM'; payload: string }
-  | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
-  | { type: 'TOGGLE_CART' }
-  | { type: 'CLEAR_CART' };
+export type CartAction =
+  | { type: "ADD_ITEM"; payload: Product }
+  | { type: "REMOVE_ITEM"; payload: string }
+  | { type: "UPDATE_QUANTITY"; payload: { id: string; quantity: number } }
+  | { type: "TOGGLE_CART" }
+  | { type: "CLEAR_CART" };
 
 const initialState: CartState = {
   items: [],
@@ -20,12 +20,14 @@ const initialState: CartState = {
 
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
-    case 'ADD_ITEM': {
-      const existingItem = state.items.find(item => item.id === action.payload.id);
+    case "ADD_ITEM": {
+      const existingItem = state.items.find(
+        (item) => item.id === action.payload.id
+      );
       if (existingItem) {
         return {
           ...state,
-          items: state.items.map(item =>
+          items: state.items.map((item) =>
             item.id === action.payload.id
               ? { ...item, quantity: item.quantity + 1 }
               : item
@@ -37,26 +39,26 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         items: [...state.items, { ...action.payload, quantity: 1 }],
       };
     }
-    case 'REMOVE_ITEM':
+    case "REMOVE_ITEM":
       return {
         ...state,
-        items: state.items.filter(item => item.id !== action.payload),
+        items: state.items.filter((item) => item.id !== action.payload),
       };
-    case 'UPDATE_QUANTITY':
+    case "UPDATE_QUANTITY":
       return {
         ...state,
-        items: state.items.map(item =>
+        items: state.items.map((item) =>
           item.id === action.payload.id
             ? { ...item, quantity: action.payload.quantity }
             : item
         ),
       };
-    case 'TOGGLE_CART':
+    case "TOGGLE_CART":
       return {
         ...state,
         isOpen: !state.isOpen,
       };
-    case 'CLEAR_CART':
+    case "CLEAR_CART":
       return {
         ...state,
         items: [],
@@ -67,13 +69,39 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
   }
 };
 
+const initializer = (initialState: CartState) => {
+  if (typeof window !== "undefined") {
+    const storedState = localStorage.getItem("cartState");
+    if (storedState) {
+      try {
+        return JSON.parse(storedState);
+      } catch (error) {
+        console.error("Error parsing cart state:", error);
+      }
+    }
+  }
+  return initialState;
+};
+
 const CartContext = createContext<{
   state: CartState;
   dispatch: React.Dispatch<CartAction>;
 } | null>(null);
 
-export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(cartReducer, initialState);
+export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [state, dispatch] = useReducer(cartReducer, initialState, initializer);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("cartState", JSON.stringify(state));
+      } catch (error) {
+        console.error("Error saving cart state:", error);
+      }
+    }
+  }, [state]);
 
   return (
     <CartContext.Provider value={{ state, dispatch }}>
@@ -85,7 +113,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
+    throw new Error("useCart must be used within a CartProvider");
   }
   return context;
 };

@@ -1,9 +1,11 @@
-import React from 'react';
-import { X, Minus, Plus, ShoppingBag } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import Link from 'next/link';
 
 export const Cart = () => {
   const { state, dispatch } = useCart();
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false); // Estado para mostrar el diálogo
 
   const total = state.items.reduce(
     (sum, item) => sum + (item.salePrice || item.price) * item.quantity,
@@ -11,6 +13,12 @@ export const Cart = () => {
   );
 
   if (!state.isOpen) return null;
+
+  // Función para vaciar el carrito
+  const clearCart = () => {
+    dispatch({ type: 'CLEAR_CART' });
+    setShowConfirmDialog(false); // Cerrar el diálogo después de vaciar
+  };
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -87,18 +95,54 @@ export const Cart = () => {
                   <span className="font-semibold">Total</span>
                   <span className="font-bold text-lg">${total.toFixed(2)}</span>
                 </div>
-                <a
-                  href="/checkout"
-                  onClick={() => dispatch({ type: 'TOGGLE_CART' })}
-                  className="w-full bg-[#2D7337] text-white py-3 rounded-lg hover:bg-[#236129] transition-colors inline-block text-center"
-                >
-                  Proceed to Checkout
-                </a>
+                <div className="flex justify-between">
+                  {/* Botón de Vaciar Carrito */}
+                  <button
+                    onClick={() => setShowConfirmDialog(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                    Vaciar Carrito
+                  </button>
+
+                  {/* Botón de Finalizar Compra */}
+                  <Link
+                    href="/checkout"
+                    onClick={() => dispatch({ type: 'TOGGLE_CART' })}
+                    className="px-6 py-2 bg-[#2D7337] text-white rounded-lg hover:bg-[#236129] transition inline-block text-center"
+                  >
+                    Proceed to Checkout
+                  </Link>
+                </div>
               </div>
             </>
           )}
         </div>
       </div>
+
+      {/* 🔹 Diálogo de Confirmación para Vaciar Carrito */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm">
+            <h3 className="text-lg font-semibold mb-4">¿Vaciar el carrito?</h3>
+            <p className="text-gray-600 mb-4">Esta acción eliminará todos los productos del carrito.</p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={clearCart}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+              >
+                Sí, vaciar
+              </button>
+              <button
+                onClick={() => setShowConfirmDialog(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

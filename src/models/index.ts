@@ -5,7 +5,13 @@ export interface Product {
   category: 'beverages' | 'snacks' | 'essentials';
   image: string;
   rating: number;
-  reviews: number;
+  reviews: {
+    userId: string;
+    username: string;
+    rating: number;
+    comment: string;
+    date: string;
+  }[];
   description: string;
   featured?: boolean;
   onSale?: boolean;
