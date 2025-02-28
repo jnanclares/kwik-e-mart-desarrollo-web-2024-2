@@ -28,3 +28,9 @@ export interface UserData {
   createdAt: Date;
   securityPhrase?: string;
 }
+
+// Define interface for user data with ID from Firestore
+export interface UserWithId extends UserData {
+  id: string;
+  createdAt: Date;
+}

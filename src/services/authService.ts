@@ -1,5 +1,3 @@
-// src/services/authService.ts
-
 import { 
   GoogleAuthProvider, 
   signInWithPopup, 
