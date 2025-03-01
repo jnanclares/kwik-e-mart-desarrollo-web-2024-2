@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { ProductCard } from "./ProductCard";
 import { fetchProducts } from "../services/products";
 import { ProductModal } from "./ProductModal";
-import { Product } from "../models";
+import { Product } from "../models/products";
 import { Search, Filter, ArrowUpDown, XCircle } from "lucide-react";
 import { useCart } from "../context/CartContext";
 
@@ -57,7 +57,6 @@ export const ProductCatalog = () => {
       .sort((a, b) => {
         if (sortBy === "price-asc") return a.price - b.price;
         if (sortBy === "price-desc") return b.price - a.price;
-        if (sortBy === "reviews") return b.reviews - a.reviews;
         return 0;
       });
   }, [searchQuery, selectedCategory, priceMin, priceMax, sortBy, products]);

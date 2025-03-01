@@ -19,56 +19,56 @@ function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState<'home' | 'checkout'>('home');
 
-  // 🔹 Function to migrate reviews from number to array
-  useEffect(() => {
-    const migrateReviews = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "products"));
+  // // 🔹 Function to migrate reviews from number to array
+  // useEffect(() => {
+  //   const migrateReviews = async () => {
+  //     try {
+  //       const querySnapshot = await getDocs(collection(db, "products"));
 
-        for (const productDoc of querySnapshot.docs) {
-          const productData = productDoc.data();
+  //       for (const productDoc of querySnapshot.docs) {
+  //         const productData = productDoc.data();
 
-          // 🔹 Skip if reviews is already an array
-          if (Array.isArray(productData.reviews)) continue;
+  //         // 🔹 Skip if reviews is already an array
+  //         if (Array.isArray(productData.reviews)) continue;
 
-          // 🔹 Convert reviews number to an array of objects
-          const reviewsArray = [];
-          if (typeof productData.reviews === "number" && productData.reviews > 0) {
-            reviewsArray.push({
-              userId: "admin",
-              username: "Auto Migration",
-              rating: 5,
-              comment: `This product previously had ${productData.reviews} reviews.`,
-              date: new Date().toISOString(),
-            });
-          }
+  //         // 🔹 Convert reviews number to an array of objects
+  //         const reviewsArray = [];
+  //         if (typeof productData.reviews === "number" && productData.reviews > 0) {
+  //           reviewsArray.push({
+  //             userId: "admin",
+  //             username: "Auto Migration",
+  //             rating: 5,
+  //             comment: `This product previously had ${productData.reviews} reviews.`,
+  //             date: new Date().toISOString(),
+  //           });
+  //         }
 
-          // 🔹 Update the product in Firebase
-          await updateDoc(doc(db, "products", productDoc.id), {
-            reviews: reviewsArray, // Now an array
-          });
+  //         // 🔹 Update the product in Firebase
+  //         await updateDoc(doc(db, "products", productDoc.id), {
+  //           reviews: reviewsArray, // Now an array
+  //         });
 
-          console.log(`✅ Migrated reviews for product: ${productDoc.id}`);
-        }
+  //         console.log(`✅ Migrated reviews for product: ${productDoc.id}`);
+  //       }
 
-        console.log("🎉 Review migration completed successfully!");
-      } catch (error) {
-        console.error("⚠️ Error migrating reviews:", error);
-      }
-    };
+  //       console.log("🎉 Review migration completed successfully!");
+  //     } catch (error) {
+  //       console.error("⚠️ Error migrating reviews:", error);
+  //     }
+  //   };
 
-    migrateReviews();
-  }, []);
+  //   migrateReviews();
+  // }, []);
 
   // 🔹 Function to update product discounts
   useEffect(() => {
     const updateProductsAndDeals = async () => {
       try {
-        console.log("🔄 Applying discounts...");
+        console.log("🔄 Aplicando descuentos...");
         await applyDailyDeals();
-        console.log("✅ Discounts applied based on the day of the week.");
+        console.log("✅ Descuentos aplicados.");
       } catch (error) {
-        console.error("⚠️ Error updating products or discounts:", error);
+        console.error("⚠️ Error al aplicar descuentos:", error);
       }
     };
 
