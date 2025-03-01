@@ -1,5 +1,6 @@
 import React, { createContext, useEffect, useContext, useReducer } from "react";
-import { CartItem, Product } from "../models";
+import { Product } from "../models/products";
+import { CartItem } from "../models/cart";
 
 interface CartState {
   items: CartItem[];

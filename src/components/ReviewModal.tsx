@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Product } from "../models";
+import { Product } from "../models/products";
 import { X, Star } from "lucide-react";
 
 interface ReviewModalProps {

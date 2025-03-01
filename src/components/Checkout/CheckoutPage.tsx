@@ -66,7 +66,9 @@ const Invoice: React.FC<{ order: OrderDetails }> = ({ order }) => {
         <tbody>
           {order.items.map((item) => {
             const effectivePrice =
-              item.salePrice && item.salePrice < item.price ? item.salePrice : item.price;
+            typeof item.salePrice === 'number' && item.salePrice > 0 && item.salePrice < item.price
+              ? item.salePrice
+              : item.price;
             return (
               <tr key={item.id}>
                 <td className="py-2">{item.name}</td>
@@ -171,7 +173,7 @@ export const CheckoutPage = () => {
         item.quantity),
     0
   );
-  const shipping = 5.99;
+  const shipping = subtotal*0.3;
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
 
@@ -605,73 +607,75 @@ export const CheckoutPage = () => {
             <div className="bg-white p-6 rounded-lg shadow-xl">
               <h3 className="text-lg font-bold mb-4">Resumen del Pedido</h3>
               <div className="space-y-4 mb-6">
-                {cartState.items.map((item) => {
-                  const hasDiscount = item.salePrice !== undefined && item.salePrice < item.price;
-                  const originalPrice = Number(item.price);
-                  const discountedPrice = hasDiscount ? Number(item.salePrice) : originalPrice;
-                  return (
-                    <div key={item.id} className="flex justify-between items-center">
-                      <div>
-                        <span className="font-medium">{item.name}</span>
-                        <div className="flex items-center gap-2 mt-1">
-                          <button
-                            onClick={() =>
-                              cartDispatch({
-                                type: 'UPDATE_QUANTITY',
-                                payload: {
-                                  id: item.id,
-                                  quantity: Math.max(1, item.quantity - 1),
-                                },
-                              })
-                            }
-                            className="text-[#2D7337] hover:text-[#236129]"
-                          >
-                            <Minus size={16} />
-                          </button>
-                          <span className="text-sm">{item.quantity}</span>
-                          <button
-                            onClick={() =>
-                              cartDispatch({
-                                type: 'UPDATE_QUANTITY',
-                                payload: { id: item.id, quantity: item.quantity + 1 },
-                              })
-                            }
-                            className="text-[#2D7337] hover:text-[#236129]"
-                          >
-                            <Plus size={16} />
-                          </button>
-                          <button
-                            onClick={() =>
-                              cartDispatch({ type: 'REMOVE_ITEM', payload: item.id })
-                            }
-                            className="text-[#CC0000] hover:text-[#CC0000]"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                        {hasDiscount ? (
-                          <>
-                            <span className="text-gray-500 block text-sm line-through">
-                              ${originalPrice.toFixed(2)}
-                            </span>
-                            <span className="text-green-600 block text-sm">
-                              ${discountedPrice.toFixed(2)}
-                            </span>
-                            <span className="text-green-600 block text-sm">
-                              Descuento:{' '}
-                              {Math.round(((originalPrice - discountedPrice) / originalPrice) * 100)}%
-                            </span>
-                          </>
-                        ) : (
-                          <span className="text-gray-700 block text-sm">
-                            ${Number(originalPrice).toFixed(2)}
-                          </span>
-                        )}
-                      </div>
-                      <span>${(discountedPrice * item.quantity).toFixed(2)}</span>
+              {cartState.items.map((item) => {
+              const isSalePriceValid = typeof item.salePrice === 'number' && item.salePrice > 0 && item.salePrice < item.price;
+              const originalPrice = Number(item.price);
+              const discountedPrice = isSalePriceValid ? Number(item.salePrice) : originalPrice;
+
+              return (
+                <div key={item.id} className="flex justify-between items-center">
+                  <div>
+                    <span className="font-medium">{item.name}</span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <button
+                        onClick={() =>
+                          cartDispatch({
+                            type: 'UPDATE_QUANTITY',
+                            payload: {
+                              id: item.id,
+                              quantity: Math.max(1, item.quantity - 1),
+                            },
+                          })
+                        }
+                        className="text-[#2D7337] hover:text-[#236129]"
+                      >
+                        <Minus size={16} />
+                      </button>
+                      <span className="text-sm">{item.quantity}</span>
+                      <button
+                        onClick={() =>
+                          cartDispatch({
+                            type: 'UPDATE_QUANTITY',
+                            payload: { id: item.id, quantity: item.quantity + 1 },
+                          })
+                        }
+                        className="text-[#2D7337] hover:text-[#236129]"
+                      >
+                        <Plus size={16} />
+                      </button>
+                      <button
+                        onClick={() =>
+                          cartDispatch({ type: 'REMOVE_ITEM', payload: item.id })
+                        }
+                        className="text-[#CC0000] hover:text-[#CC0000]"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
-                  );
-                })}
+                    {isSalePriceValid ? (
+                      <>
+                        <span className="text-gray-500 block text-sm line-through">
+                          ${originalPrice.toFixed(2)}
+                        </span>
+                        <span className="text-green-600 block text-sm">
+                          ${discountedPrice.toFixed(2)}
+                        </span>
+                        <span className="text-green-600 block text-sm">
+                          Descuento:{' '}
+                          {Math.round(((originalPrice - discountedPrice) / originalPrice) * 100)}%
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-gray-700 block text-sm">
+                        ${originalPrice.toFixed(2)}
+                      </span>
+                    )}
+      </div>
+      <span>${(discountedPrice * item.quantity).toFixed(2)}</span>
+    </div>
+  );
+})}
+
               </div>
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between">

@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Product } from "../models";
+import { Product } from "../models/products";
 import { X, Star, ShoppingCart } from "lucide-react";
 import { useCart } from "../context/CartContext"; // Importamos el carrito
 
