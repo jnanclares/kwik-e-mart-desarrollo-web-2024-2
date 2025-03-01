@@ -5,6 +5,9 @@ import { db } from "../../firebase/firebaseConfig"; // Adjust if needed
 
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { Invoice } from './Invoice';
+
+
 import {
   CreditCard,
   Truck,
@@ -42,58 +45,7 @@ interface OrderDetails {
   customer: string;
 }
 
-const Invoice: React.FC<{ order: OrderDetails }> = ({ order }) => {
-  return (
-    <div className="invoice p-6 bg-white rounded-lg shadow-xl mt-8">
-      <h1 className="text-3xl font-bold mb-4">Factura de Compra</h1>
-      <div className="mb-4">
-        <p>
-          <strong>Fecha:</strong> {new Date(order.date).toLocaleString()}
-        </p>
-        <p>
-          <strong>Cliente:</strong> {order.customer}
-        </p>
-      </div>
-      <table className="w-full mb-4">
-        <thead>
-          <tr>
-            <th className="text-left border-b pb-2">Producto</th>
-            <th className="text-right border-b pb-2">Cantidad</th>
-            <th className="text-right border-b pb-2">Precio Unitario</th>
-            <th className="text-right border-b pb-2">Subtotal</th>
-          </tr>
-        </thead>
-        <tbody>
-          {order.items.map((item) => {
-            const effectivePrice =
-              item.salePrice && item.salePrice < item.price ? item.salePrice : item.price;
-            return (
-              <tr key={item.id}>
-                <td className="py-2">{item.name}</td>
-                <td className="py-2 text-right">{item.quantity}</td>
-                <td className="py-2 text-right">${Number(effectivePrice).toFixed(2)}</td>
-                <td className="py-2 text-right">
-                  ${(effectivePrice * item.quantity).toFixed(2)}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      <div className="text-right">
-        <p>
-          <strong>Envío:</strong> ${order.shipping.toFixed(2)}
-        </p>
-        <p>
-          <strong>Impuestos:</strong> ${order.tax.toFixed(2)}
-        </p>
-        <p className="text-xl font-bold mt-2">
-          <strong>Total:</strong> ${order.total.toFixed(2)}
-        </p>
-      </div>
-    </div>
-  );
-};
+
 
 export const CheckoutPage = () => {
   const { state: cartState, dispatch: cartDispatch } = useCart();
@@ -238,36 +190,43 @@ export const CheckoutPage = () => {
     processOrder();
   };
 
-  const processOrder = () => {
+  // Dentro de processOrder:
+  const processOrder = async () => {
     try {
-      const order = {
+      const order: Invoice = {
         date: new Date().toISOString(),
         items: cartState.items,
         shipping,
         tax,
         total,
-        customer: authState.user?.name || 'Cliente',
+        customer: authState.user?.name ?? 'Cliente Anónimo',
       };
+  
+      // Guarda la orden en el estado local para mostrar la factura en la confirmación
       setOrderDetails(order);
-
+  
+      // Si el usuario está autenticado, actualiza su documento en Firestore
       if (authState.user) {
-        const newPurchase = {
-          date: order.date,
-          items: cartState.items,
-          total,
-        };
+        const userRef = doc(db, "users", authState.user.id);
+        await updateDoc(userRef, {
+          purchaseHistory: arrayUnion(order)  // Agrega la factura con "customer" al arreglo existente
+        });
+        
+        // Actualiza el estado local incluyendo el campo "customer"
         const updatedUser = {
           ...authState.user,
-          purchaseHistory: [...authState.user.purchaseHistory, newPurchase],
+          purchaseHistory: [...authState.user.purchaseHistory, order],
         };
         authDispatch({ type: 'UPDATE_USER', payload: updatedUser });
       }
+      // Limpia el carrito y pasa al paso de confirmación
       cartDispatch({ type: 'CLEAR_CART' });
       setStep('confirmation');
     } catch (err) {
       setError('Ocurrió un error al procesar tu orden. Por favor, intenta nuevamente.');
     }
   };
+  
 
   if (cartState.items.length === 0 && step !== 'confirmation') {
     return (
