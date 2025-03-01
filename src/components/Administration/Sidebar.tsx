@@ -4,10 +4,6 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-  LayoutDashboard, 
-  ShoppingCart, 
-  BarChart2, 
-  Activity, 
   Users, 
   Package, 
   Tag,
@@ -17,11 +13,8 @@ import {
 } from 'lucide-react';
 
 const menuItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
-  { icon: BarChart2, label: 'Sales Reports', path: '/admin/sales' },
-  { icon: Activity, label: 'Activity Monitor', path: '/admin/activity' },
+  { icon: Package, label: 'Inventory', path: '/admin' },
   { icon: Users, label: 'User Management', path: '/admin/users' },
-  { icon: Package, label: 'Inventory', path: '/admin/inventory' },
   { icon: Tag, label: 'Offers', path: '/admin/offers' },
   { icon: MessageSquare, label: 'Reviews Moderation', path: '/admin/reviews-moderation' }, // Added Reviews Moderation
 ];
