@@ -17,6 +17,7 @@ export default function CategoryDistribution() {
     image: '',
     description: '',
     featured: false,
+    reviews: [] as { userId: string; username: string; rating: number; comment: string; date: string }[],
   });
   // Calculate category distribution
   const [products, setProducts] = useState<Product[]>([]);
@@ -77,6 +78,7 @@ export default function CategoryDistribution() {
         image: '',
         description: '',
         featured: false,
+        reviews: [] as { userId: string; username: string; rating: number; comment: string; date: string }[],
       });
   
       // Recargar datos después de crear el producto
@@ -220,6 +222,7 @@ export default function CategoryDistribution() {
                       image: '',
                       description: '',
                       featured: false,
+                      reviews: [] as { userId: string; username: string; rating: number; comment: string; date: string }[],
                     });
                   }}
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Star, ShoppingCart } from 'lucide-react';
-import { Product } from '../models';
+import { Product } from '../models/products';
 import { useCart, CartAction } from '../context/CartContext';
 import { ReviewModal } from "./ReviewModal"; // Import Review Modal
 
@@ -23,6 +23,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       ? Math.round(((product.price - salePrice) / product.price) * 100)
       : 0;
 
+    const averageRating =
+    product.reviews.length > 0
+      ? product.reviews.reduce((acc, review) => acc + review.rating, 0) / product.reviews.length
+      : 0;
+  
+
   return (
     <>
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 relative">
@@ -43,11 +49,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <div className="p-4">
           <h3 className="text-lg font-semibold mb-2">{product.name}</h3>
           <div className="flex items-center mb-2">
-            <div className="flex items-center">
+          <div className="flex items-center">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-4 w-4 ${i < product.rating ? 'text-[#FED41D] fill-current' : 'text-gray-300'}`}
+                  className={`h-4 w-4 ${i < Math.round(averageRating) ? 'text-[#FED41D] fill-current' : 'text-gray-300'}`}
                 />
               ))}
             </div>

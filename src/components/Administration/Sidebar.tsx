@@ -12,6 +12,7 @@ import {
   Package, 
   Tag,
   Store,
+  MessageSquare, // Added icon for reviews
   ArrowLeft
 } from 'lucide-react';
 
@@ -22,6 +23,7 @@ const menuItems = [
   { icon: Users, label: 'User Management', path: '/admin/users' },
   { icon: Package, label: 'Inventory', path: '/admin/inventory' },
   { icon: Tag, label: 'Offers', path: '/admin/offers' },
+  { icon: MessageSquare, label: 'Reviews Moderation', path: '/admin/reviews-moderation' }, // Added Reviews Moderation
 ];
 
 export default function Sidebar() {

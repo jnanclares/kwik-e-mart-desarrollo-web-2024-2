@@ -1,6 +1,6 @@
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
-import { Product } from "../models";
+import { Product } from "../models/products";
 
 // 🔹 Múltiples ofertas por día de la semana
 const DAILY_DEALS: Record<number, { name: string; discount: number }[]> = {

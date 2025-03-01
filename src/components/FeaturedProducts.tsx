@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ProductCard } from "./ProductCard";
 import { fetchProducts } from "../services/products";
 import { ProductModal } from "./ProductModal";
-import { Product } from "../models";
+import { Product } from "../models/products";
 import { useCart } from "../context/CartContext"; // 🛒 Importamos el carrito
 
 export const FeaturedProducts = () => {
