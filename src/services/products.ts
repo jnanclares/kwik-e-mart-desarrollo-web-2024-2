@@ -1,6 +1,6 @@
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
-import { Product } from "../models";
+import { db } from "../config/firebaseConfig";
+import { Product } from "@/models/products";
 
 export const fetchProducts = async (): Promise<Product[]> => {
   const querySnapshot = await getDocs(collection(db, "products"));
@@ -20,6 +20,7 @@ export const fetchProducts = async (): Promise<Product[]> => {
       reviews: data.reviews,
       description: data.description || "No description available",
       featured: data.featured ?? false,
+      stock: data.stock || 0
     };
   });
 };

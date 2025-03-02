@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { doc, updateDoc, arrayUnion } from "firebase/firestore";
-import { db } from "../../firebase/firebaseConfig"; // Adjust if needed
+import { db } from "../../config/firebaseConfig"; // Adjust if needed
 
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { OrderDetails, PaymentDetails, ShippingDetails } from "@/models/checkout";
 import { User } from "@/models/user";
-import { useToast } from '@/components/ToastNotification';
+import { notificationService } from "@/services/notificationService";
 
 
 type PaymentMethod =
@@ -111,17 +111,16 @@ export const CheckoutPage = () => {
   });
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
-  const { showToast } = useToast();
 
   // Enviar review
   const handleSubmitReview = async () => {
     if (!reviewProductId || !comment.trim()) {
-      showToast("Por favor selecciona un producto y escribe una reseña.", "warning");
+      notificationService.notify("Por favor selecciona un producto y escribe una reseña.", "warning");
       return;
     }
 
     if (!authState.user) {
-      showToast("Debes iniciar sesión para dejar una reseña.", "warning");
+      notificationService.notify("Debes iniciar sesión para dejar una reseña.", "warning");
       return;
     }
 
@@ -145,10 +144,10 @@ export const CheckoutPage = () => {
       setRating(5);
 
       // Reemplazar el alert por el toast
-      showToast("¡Tu reseña ha sido enviada con éxito! Gracias por tu opinión.", "success", 4000);
+      notificationService.notify("¡Tu reseña ha sido enviada con éxito! Gracias por tu opinión.", "success", 4000);
     } catch (error) {
       console.error("Error al enviar reseña:", error);
-      showToast("Hubo un error al enviar tu reseña. Inténtalo de nuevo.", "error");
+      notificationService.notify("Hubo un error al enviar tu reseña. Inténtalo de nuevo.", "error");
     }
   };
 
@@ -175,13 +174,13 @@ export const CheckoutPage = () => {
       !shippingDetails.zipCode
     ) {
       setError("Por favor completa todos los campos de envío");
-      showToast("Por favor completa todos los campos de envío", "warning");
+      notificationService.notify("Por favor completa todos los campos de envío", "warning");
       return;
     }
     const zipCodeRegex = /^\d{5,6}$/;
     if (!zipCodeRegex.test(shippingDetails.zipCode)) {
       setError("El código postal es inválido. Debe contener 5 o 6 dígitos.");
-      showToast("El código postal es inválido. Debe contener 5 o 6 dígitos.", "warning");
+      notificationService.notify("El código postal es inválido. Debe contener 5 o 6 dígitos.", "warning");
       return;
     }
     setError(null);
@@ -268,10 +267,10 @@ export const CheckoutPage = () => {
       setStep("confirmation");
 
       // Añadir mensaje de éxito
-      showToast("¡Tu pedido ha sido procesado correctamente!", "success", 4000);
+      notificationService.notify("¡Tu pedido ha sido procesado correctamente!", "success", 4000);
     } catch (err) {
       setError("Ocurrió un error al procesar tu orden. Por favor, intenta nuevamente.");
-      showToast("Error al procesar el pedido. Inténtalo de nuevo.", "error");
+      notificationService.notify("Error al procesar el pedido. Inténtalo de nuevo.", "error");
     }
   };
 

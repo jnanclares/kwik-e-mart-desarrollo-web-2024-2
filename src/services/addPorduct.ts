@@ -1,5 +1,5 @@
 import { collection, addDoc } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
+import { db } from "../config/firebaseConfig";
 import { Product } from "@/services/offers";
 
 

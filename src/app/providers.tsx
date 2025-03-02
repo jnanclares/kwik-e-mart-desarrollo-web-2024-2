@@ -7,11 +7,11 @@ import { CartProvider } from '@/context/CartContext';
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <CartProvider>
-        <ToastProvider>
+      <ToastProvider>
+        <CartProvider>
           {children}
-        </ToastProvider>
-      </CartProvider>
+        </CartProvider>
+      </ToastProvider>
     </AuthProvider>
   );
 }

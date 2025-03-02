@@ -3,7 +3,7 @@ import { ProductCard } from "./ProductCard";
 import { fetchProducts } from "../services/products";
 import { ProductModal } from "./ProductModal";
 import { Product } from "../models/products";
-import { Search, Filter, ArrowUpDown, XCircle } from "lucide-react";
+import { Search, Filter, ArrowUpDown, XCircle, ShoppingBag } from "lucide-react";
 import { useCart } from "../context/CartContext";
 
 export const ProductCatalog = () => {
@@ -14,15 +14,20 @@ export const ProductCatalog = () => {
   const [priceMax, setPriceMax] = useState<number | "">("");
   const [sortBy, setSortBy] = useState<string>("default");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const { dispatch } = useCart(); // Acceder al carrito
+  const [showOutOfStock, setShowOutOfStock] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const { dispatch } = useCart();
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
+        setIsLoading(true);
         const data = await fetchProducts();
         setProducts(data);
       } catch (error) {
         console.error("Error al obtener productos:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     loadProducts();
@@ -35,6 +40,7 @@ export const ProductCatalog = () => {
     setPriceMin("");
     setPriceMax("");
     setSortBy("default");
+    setShowOutOfStock(true);
   };
 
   // Filtrar y ordenar productos
@@ -52,14 +58,52 @@ export const ProductCatalog = () => {
           (priceMin === "" || product.price >= priceMin) &&
           (priceMax === "" || product.price <= priceMax);
 
-        return matchesSearch && matchesCategory && matchesPrice;
+        const matchesStock = showOutOfStock || product.stock > 0;
+
+        return matchesSearch && matchesCategory && matchesPrice && matchesStock;
       })
       .sort((a, b) => {
         if (sortBy === "price-asc") return a.price - b.price;
         if (sortBy === "price-desc") return b.price - a.price;
+        if (sortBy === "stock-asc") return a.stock - b.stock;
+        if (sortBy === "stock-desc") return b.stock - a.stock;
         return 0;
       });
-  }, [searchQuery, selectedCategory, priceMin, priceMax, sortBy, products]);
+  }, [searchQuery, selectedCategory, priceMin, priceMax, sortBy, showOutOfStock, products]);
+
+  // Contar productos por categoría
+  const categoryCounts = useMemo(() => {
+    const counts = {
+      all: products.length,
+      beverages: 0,
+      snacks: 0,
+      essentials: 0
+    };
+    
+    products.forEach(product => {
+      if (product.category in counts) {
+        counts[product.category as keyof typeof counts]++;
+      }
+    });
+    
+    return counts;
+  }, [products]);
+
+  // Contar productos con stock vs sin stock
+  const stockCounts = useMemo(() => {
+    return {
+      inStock: products.filter(p => p.stock > 0).length,
+      outOfStock: products.filter(p => p.stock <= 0).length
+    };
+  }, [products]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#2D7337]"></div>
+      </div>
+    );
+  }
 
   return (
     <section className="py-12 bg-gray-50">
@@ -88,10 +132,10 @@ export const ProductCatalog = () => {
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="rounded-lg border border-gray-300 py-2 px-4 focus:ring-2 focus:ring-[#2D7337] focus:border-transparent"
             >
-              <option value="all">Todas las categorías</option>
-              <option value="beverages">Bebidas</option>
-              <option value="snacks">Snacks</option>
-              <option value="essentials">Esenciales</option>
+              <option value="all">Todas las categorías ({categoryCounts.all})</option>
+              <option value="beverages">Bebidas ({categoryCounts.beverages})</option>
+              <option value="snacks">Snacks ({categoryCounts.snacks})</option>
+              <option value="essentials">Esenciales ({categoryCounts.essentials})</option>
             </select>
           </div>
 
@@ -126,8 +170,27 @@ export const ProductCatalog = () => {
               <option value="default">Ordenar por...</option>
               <option value="price-asc">Precio: Menor a Mayor</option>
               <option value="price-desc">Precio: Mayor a Menor</option>
+              <option value="stock-desc">Stock: Mayor a Menor</option>
+              <option value="stock-asc">Stock: Menor a Mayor</option>
               <option value="reviews">Popularidad</option>
             </select>
+          </div>
+
+          {/* Filtro de Stock */}
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="h-5 w-5 text-gray-600" />
+            <label className="inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showOutOfStock}
+                onChange={() => setShowOutOfStock(prev => !prev)}
+                className="sr-only peer"
+              />
+              <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#2D7337] rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#2D7337]"></div>
+              <span className="ms-3 text-sm font-medium text-gray-700">
+                Mostrar agotados ({stockCounts.outOfStock})
+              </span>
+            </label>
           </div>
 
           {/* Botón de limpiar filtros con tooltip */}
@@ -155,17 +218,16 @@ export const ProductCatalog = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
               <div
-              key={product.id}
-              onClick={(e) => {
-                if (!(e.target as HTMLElement).closest(".add-to-cart-button")) {
-                  setSelectedProduct(product);
-                }
-              }}
-              className="cursor-pointer"
-            >
-              <ProductCard product={product} dispatch={dispatch} />
-            </div>
-
+                key={product.id}
+                onClick={(e) => {
+                  if (!(e.target as HTMLElement).closest(".add-to-cart-button")) {
+                    setSelectedProduct(product);
+                  }
+                }}
+                className="cursor-pointer"
+              >
+                <ProductCard product={product} dispatch={dispatch} />
+              </div>
             ))}
           </div>
         )}

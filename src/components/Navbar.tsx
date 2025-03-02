@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ShoppingCart, User, Store, LayoutDashboard, LogOut, FileText } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -15,8 +15,20 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ onAuthClick }) => {
   const { state: cartState, dispatch: cartDispatch } = useCart();
   const { state: authState, dispatch: authDispatch } = useAuth();
-  const itemCount = cartState.items.reduce((acc, item) => acc + item.quantity, 0);
   const router = useRouter();
+  
+  // Usamos un estado local para controlar si estamos en el cliente o no
+  const [isClient, setIsClient] = useState(false);
+
+  // Este efecto se ejecuta solo en el cliente después del montaje
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Calculamos el número de elementos en el carrito solo cuando estamos en el cliente
+  const itemCount = isClient 
+    ? cartState.items.reduce((acc, item) => acc + item.quantity, 0) 
+    : 0;
 
   const handleSignOut = async () => {
     await signOutUser();
@@ -82,7 +94,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onAuthClick }) => {
               onClick={() => cartDispatch({ type: 'TOGGLE_CART' })}
             >
               <ShoppingCart className="h-6 w-6" />
-              {itemCount > 0 && (
+              {/* Solo mostramos el contador si estamos en el cliente y hay elementos */}
+              {isClient && itemCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-[#CC0000] text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                   {itemCount}
                 </span>

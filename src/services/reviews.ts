@@ -1,4 +1,4 @@
-import { db } from "../firebase/firebaseConfig";
+import { db } from "../config/firebaseConfig";
 import { collection, doc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
 
 export interface Review {
