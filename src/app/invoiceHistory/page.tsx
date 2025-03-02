@@ -1,12 +1,20 @@
-'use client';
+"use client";
 
-import React from 'react';
-import InvoiceHistory from '@/components/Checkout/InvoiceHistory';
+import React, { useState } from "react";
+import InvoiceHistory from "@/components/Checkout/InvoiceHistory";
+import { Navbar } from "@/components/Navbar";
+import { AuthModal } from "@/components/Auth/AuthModal";
 
 export default function InvoiceHistoryPage() {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div>
+      <Navbar onAuthClick={() => setIsAuthModalOpen(true)} />
       <InvoiceHistory />
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
     </div>
   );
 }
