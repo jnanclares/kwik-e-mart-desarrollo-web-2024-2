@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
-import { ShoppingCart, User, Store, LayoutDashboard, LogOut } from 'lucide-react';
+import Link from 'next/link';
+import { ShoppingCart, User, Store, LayoutDashboard, LogOut, FileText } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -20,7 +23,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onAuthClick }) => {
     authDispatch({ type: 'LOGOUT' });
   };
 
-  // Check if the user has admin role
   const isAdmin = authState.isAuthenticated && authState.user?.role === 'admin';
 
   return (
@@ -31,20 +33,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onAuthClick }) => {
             <Store className="h-8 w-8 text-[#FED41D]" />
             <span className="ml-2 text-xl font-bold">E-Kwik-E-Mart</span>
           </div>
-          
+
           <div className="flex items-center space-x-4">
-            {/* Admin button - only show if user is admin */}
             {isAdmin && (
               <button
                 className="hover:text-[#FED41D] transition-colors flex items-center gap-2"
                 onClick={() => router.push('/admin')}
-                >
-                  <LayoutDashboard className="h-6 w-6" />
-                  <span className="hidden md:inline">Admin</span>
+              >
+                <LayoutDashboard className="h-6 w-6" />
+                <span className="hidden md:inline">Admin</span>
               </button>
             )}
 
-            {/* User profile/login button */}
             <div className="relative group">
               <button 
                 className="hover:text-[#FED41D] transition-colors flex items-center gap-2"
@@ -63,8 +63,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onAuthClick }) => {
                   <span className="hidden md:inline">{authState.user?.name}</span>
                 )}
               </button>
-              
-              {/* Dropdown menu - only show for authenticated users */}
               {authState.isAuthenticated && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200">
                   <button
@@ -78,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onAuthClick }) => {
               )}
             </div>
 
-            {/* Cart button */}
+            {/* Botón del carrito */}
             <button 
               className="relative hover:text-[#FED41D] transition-colors"
               onClick={() => cartDispatch({ type: 'TOGGLE_CART' })}
@@ -90,6 +88,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onAuthClick }) => {
                 </span>
               )}
             </button>
+
+            {/* Botón de Historial de Facturas (solo ícono, sin texto) a la derecha del carrito */}
+            {authState.isAuthenticated && (
+              <Link
+                href="/invoiceHistory"
+                className="relative hover:text-[#FED41D] transition-colors flex items-center"
+              >
+                <FileText className="h-6 w-6" />
+              </Link>
+            )}
           </div>
         </div>
       </div>

@@ -12,8 +12,11 @@ export interface User {
   securityPhrase?: string;
   purchaseHistory: {
     date: string;
-    items: CartItem[];
+    items: any[];       // Detalles de los productos comprados
+    shipping: number;
+    tax: number;
     total: number;
+    pay_method: string;
   }[];
 }
 
@@ -27,6 +30,14 @@ export interface UserData {
   role: string;
   createdAt: Date;
   securityPhrase?: string;
+  purchaseHistory: {
+    date: Date;
+    items: CartItem[];
+    shipping: number;
+    tax: number;
+    total: number;
+    pay_method: string;
+  }[];
 }
 
 // Define interface for user data with ID from Firestore
