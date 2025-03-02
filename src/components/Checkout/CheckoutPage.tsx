@@ -5,10 +5,8 @@ import { db } from "../../firebase/firebaseConfig"; // Adjust if needed
 
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
-import { Invoice } from "./Invoice";
 
 import {
-  CreditCard,
   Truck,
   ShoppingBag,
   AlertTriangle,
@@ -16,20 +14,10 @@ import {
   Minus,
   Trash2,
 } from "lucide-react";
+import { OrderDetails, PaymentDetails, ShippingDetails } from "@/models/checkout";
+import { User } from "@/models/user";
+import { useToast } from '@/components/ToastNotification';
 
-interface ShippingDetails {
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-}
-
-interface PaymentDetails {
-  cardNumber: string;
-  expiryDate: string;
-  cvv: string;
-  nameOnCard: string;
-}
 
 type PaymentMethod =
   | "card"
@@ -37,14 +25,6 @@ type PaymentMethod =
   | "contraentrega"
   | "mercado_pago";
 
-interface OrderDetails {
-  date: string;
-  items: any[];
-  shipping: number;
-  tax: number;
-  total: number;
-  customer: string;
-}
 
 const Invoice: React.FC<{ order: OrderDetails }> = ({ order }) => {
   return (
@@ -131,16 +111,17 @@ export const CheckoutPage = () => {
   });
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
+  const { showToast } = useToast();
 
   // Enviar review
   const handleSubmitReview = async () => {
     if (!reviewProductId || !comment.trim()) {
-      alert("Por favor selecciona un producto y escribe una reseña.");
+      showToast("Por favor selecciona un producto y escribe una reseña.", "warning");
       return;
     }
 
     if (!authState.user) {
-      alert("Debes iniciar sesión para dejar una reseña.");
+      showToast("Debes iniciar sesión para dejar una reseña.", "warning");
       return;
     }
 
@@ -162,10 +143,12 @@ export const CheckoutPage = () => {
       setReviewProductId(null);
       setComment("");
       setRating(5);
-      alert("Reseña enviada con éxito!");
+
+      // Reemplazar el alert por el toast
+      showToast("¡Tu reseña ha sido enviada con éxito! Gracias por tu opinión.", "success", 4000);
     } catch (error) {
       console.error("Error al enviar reseña:", error);
-      alert("Hubo un error al enviar tu reseña. Inténtalo de nuevo.");
+      showToast("Hubo un error al enviar tu reseña. Inténtalo de nuevo.", "error");
     }
   };
 
@@ -176,7 +159,7 @@ export const CheckoutPage = () => {
       (item.salePrice && item.salePrice < item.price
         ? item.salePrice
         : item.price) *
-        item.quantity,
+      item.quantity,
     0
   );
   const shipping = subtotal * 0.3;
@@ -192,11 +175,13 @@ export const CheckoutPage = () => {
       !shippingDetails.zipCode
     ) {
       setError("Por favor completa todos los campos de envío");
+      showToast("Por favor completa todos los campos de envío", "warning");
       return;
     }
     const zipCodeRegex = /^\d{5,6}$/;
     if (!zipCodeRegex.test(shippingDetails.zipCode)) {
       setError("El código postal es inválido. Debe contener 5 o 6 dígitos.");
+      showToast("El código postal es inválido. Debe contener 5 o 6 dígitos.", "warning");
       return;
     }
     setError(null);
@@ -249,13 +234,14 @@ export const CheckoutPage = () => {
   // Dentro de processOrder:
   const processOrder = async () => {
     try {
-      const order: Invoice = {
+      const order: OrderDetails & { pay_method: string } = {
         date: new Date().toISOString(),
         items: cartState.items,
         shipping,
         tax,
         total,
         customer: authState.user?.name ?? "Cliente Anónimo",
+        pay_method: paymentMethod,
       };
 
       // Guarda la orden en el estado local para mostrar la factura en la confirmación
@@ -265,23 +251,27 @@ export const CheckoutPage = () => {
       if (authState.user) {
         const userRef = doc(db, "users", authState.user.id);
         await updateDoc(userRef, {
-          purchaseHistory: arrayUnion(order), // Agrega la factura con "customer" al arreglo existente
+          purchaseHistory: arrayUnion(order),
         });
 
         // Actualiza el estado local incluyendo el campo "customer"
-        const updatedUser = {
+        const updatedUser: User = {
           ...authState.user,
           purchaseHistory: [...authState.user.purchaseHistory, order],
         };
+
         authDispatch({ type: "UPDATE_USER", payload: updatedUser });
       }
+
       // Limpia el carrito y pasa al paso de confirmación
       cartDispatch({ type: "CLEAR_CART" });
       setStep("confirmation");
+
+      // Añadir mensaje de éxito
+      showToast("¡Tu pedido ha sido procesado correctamente!", "success", 4000);
     } catch (err) {
-      setError(
-        "Ocurrió un error al procesar tu orden. Por favor, intenta nuevamente."
-      );
+      setError("Ocurrió un error al procesar tu orden. Por favor, intenta nuevamente.");
+      showToast("Error al procesar el pedido. Inténtalo de nuevo.", "error");
     }
   };
 
@@ -423,44 +413,40 @@ export const CheckoutPage = () => {
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("card")}
-                    className={`py-2 px-4 rounded-lg transition-colors ${
-                      paymentMethod === "card"
+                    className={`py-2 px-4 rounded-lg transition-colors ${paymentMethod === "card"
                         ? "bg-[#2D7337] text-white"
                         : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    }`}
+                      }`}
                   >
                     Tarjeta
                   </button>
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("transferencia")}
-                    className={`py-2 px-4 rounded-lg transition-colors ${
-                      paymentMethod === "transferencia"
+                    className={`py-2 px-4 rounded-lg transition-colors ${paymentMethod === "transferencia"
                         ? "bg-[#2D7337] text-white"
                         : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    }`}
+                      }`}
                   >
                     Transferencia
                   </button>
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("contraentrega")}
-                    className={`py-2 px-4 rounded-lg transition-colors ${
-                      paymentMethod === "contraentrega"
+                    className={`py-2 px-4 rounded-lg transition-colors ${paymentMethod === "contraentrega"
                         ? "bg-[#2D7337] text-white"
                         : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    }`}
+                      }`}
                   >
                     Contraentrega
                   </button>
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("mercado_pago")}
-                    className={`py-2 px-4 rounded-lg transition-colors ${
-                      paymentMethod === "mercado_pago"
+                    className={`py-2 px-4 rounded-lg transition-colors ${paymentMethod === "mercado_pago"
                         ? "bg-[#2D7337] text-white"
                         : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    }`}
+                      }`}
                   >
                     Mercado Pago
                   </button>
@@ -632,9 +618,8 @@ export const CheckoutPage = () => {
                       <button
                         key={star}
                         onClick={() => setRating(star)}
-                        className={`text-2xl ${
-                          star <= rating ? "text-yellow-500" : "text-gray-300"
-                        }`}
+                        className={`text-2xl ${star <= rating ? "text-yellow-500" : "text-gray-300"
+                          }`}
                       >
                         ★
                       </button>
@@ -743,7 +728,7 @@ export const CheckoutPage = () => {
                               {Math.round(
                                 ((originalPrice - discountedPrice) /
                                   originalPrice) *
-                                  100
+                                100
                               )}
                               %
                             </span>

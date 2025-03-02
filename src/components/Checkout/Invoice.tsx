@@ -1,27 +1,18 @@
-// src/components/Checkout/Invoice.tsx
 'use client';
 
+import { InvoiceData } from '@/models/invoice';
 import React from 'react';
 
-interface OrderDetails {
-  date: string;
-  items: any[];
-  shipping: number;
-  tax: number;
-  total: number;
-  customer?: string;
-}
-
-export const Invoice: React.FC<{ order: OrderDetails }> = ({ order }) => {
+export const Invoice: React.FC<{ invoice: InvoiceData }> = ({ invoice }) => {
   return (
     <div className="p-6 bg-white border-2 border-[#2D7337] shadow-lg">
       <h1 className="text-3xl font-bold mb-4 text-[#2D7337]">Factura de Compra</h1>
       <div className="mb-4">
         <p className="text-lg">
-          <strong>Fecha:</strong> {new Date(order.date).toLocaleString()}
+          <strong>Fecha:</strong> {new Date(invoice.date).toLocaleString()}
         </p>
         <p className="text-lg">
-          <strong>Cliente:</strong> {order.customer ?? 'Sin nombre'}
+          <strong>Cliente:</strong> {invoice.customer ?? 'Sin nombre'}
         </p>
       </div>
       <table className="w-full mb-4 border-collapse">
@@ -34,7 +25,7 @@ export const Invoice: React.FC<{ order: OrderDetails }> = ({ order }) => {
           </tr>
         </thead>
         <tbody>
-          {order.items.map((item) => {
+          {invoice.items.map((item) => {
             const effectivePrice =
               item.salePrice && item.salePrice < item.price
                 ? item.salePrice
@@ -54,13 +45,13 @@ export const Invoice: React.FC<{ order: OrderDetails }> = ({ order }) => {
       </table>
       <div className="text-right">
         <p className="text-lg">
-          <strong>Envío:</strong> ${order.shipping.toFixed(2)}
+          <strong>Envío:</strong> ${invoice.shipping.toFixed(2)}
         </p>
         <p className="text-lg">
-          <strong>Impuestos:</strong> ${order.tax.toFixed(2)}
+          <strong>Impuestos:</strong> ${invoice.tax.toFixed(2)}
         </p>
         <p className="text-xl font-bold mt-2 text-[#2D7337]">
-          <strong>Total:</strong> ${order.total.toFixed(2)}
+          <strong>Total:</strong> ${invoice.total.toFixed(2)}
         </p>
       </div>
     </div>

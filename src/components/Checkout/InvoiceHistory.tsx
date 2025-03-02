@@ -1,4 +1,4 @@
-// src/components/Checkout/InvoiceHistory.tsx
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -9,16 +9,8 @@ import { Invoice } from "./Invoice";
 import Link from "next/link";
 import { Card, CardContent } from "../ui/card";
 import { Calendar, CreditCard, Package } from "lucide-react";
+import { InvoiceData } from "@/models/invoice";
 
-interface InvoiceData {
-  date: string;
-  items: any[];
-  shipping: number;
-  tax: number;
-  total: number;
-  pay_method: string;
-  customer?: string;
-}
 
 const InvoiceHistory: React.FC = () => {
   const { state: authState } = useAuth();
@@ -137,7 +129,7 @@ const InvoiceHistory: React.FC = () => {
             )
             .map((invoice, index) => (
               <div key={index}>
-                <Invoice order={invoice} />
+                <Invoice invoice={invoice} />
               </div>
             ))}
         </div>
