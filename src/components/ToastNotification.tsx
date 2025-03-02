@@ -66,13 +66,11 @@ export const KwimiToast: React.FC<KwimiToastProps> = ({
 
   return (
     <div
-      className={`fixed top-4 right-4 z-50 transition-all duration-300 transform ${
-        isExiting ? "opacity-0 translate-y-[-20px]" : "opacity-100 translate-y-0"
-      }`}
+      className={`fixed top-4 right-4 z-50 transition-all duration-300 transform ${isExiting ? "opacity-0 translate-y-[-20px]" : "opacity-100 translate-y-0"
+        }`}
     >
       <div
         className={`${getBgColor()} border-4 border-[#FED41D] shadow-lg rounded-lg p-4 max-w-xs flex items-center gap-3`}
-        style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}
       >
         <div className="shrink-0">{getIcon()}</div>
         <p className="text-white font-medium flex-1">{message}</p>

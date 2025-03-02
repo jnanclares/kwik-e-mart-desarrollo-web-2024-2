@@ -287,7 +287,6 @@ export const CheckoutPage = () => {
         <ShoppingBag className="h-16 w-16 text-[#2D7337]" />
         <h2
           className="mt-4 text-2xl font-bold"
-          style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}
         >
           ¡Ay caramba! Tu carrito está vacío.
         </h2>
@@ -301,7 +300,6 @@ export const CheckoutPage = () => {
   return (
     <div
       className="min-h-screen bg-[#FDFDF2] relative px-4 sm:px-6 lg:px-8 py-12"
-      style={{ fontFamily: '"Comic Sans MS", cursive, sans-serif' }}
     >
       <button
         onClick={() => (window.location.href = "/")}
@@ -414,8 +412,8 @@ export const CheckoutPage = () => {
                     type="button"
                     onClick={() => setPaymentMethod("card")}
                     className={`py-2 px-4 rounded-lg transition-colors ${paymentMethod === "card"
-                        ? "bg-[#2D7337] text-white"
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      ? "bg-[#2D7337] text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                       }`}
                   >
                     Tarjeta
@@ -424,8 +422,8 @@ export const CheckoutPage = () => {
                     type="button"
                     onClick={() => setPaymentMethod("transferencia")}
                     className={`py-2 px-4 rounded-lg transition-colors ${paymentMethod === "transferencia"
-                        ? "bg-[#2D7337] text-white"
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      ? "bg-[#2D7337] text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                       }`}
                   >
                     Transferencia
@@ -434,8 +432,8 @@ export const CheckoutPage = () => {
                     type="button"
                     onClick={() => setPaymentMethod("contraentrega")}
                     className={`py-2 px-4 rounded-lg transition-colors ${paymentMethod === "contraentrega"
-                        ? "bg-[#2D7337] text-white"
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      ? "bg-[#2D7337] text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                       }`}
                   >
                     Contraentrega
@@ -444,8 +442,8 @@ export const CheckoutPage = () => {
                     type="button"
                     onClick={() => setPaymentMethod("mercado_pago")}
                     className={`py-2 px-4 rounded-lg transition-colors ${paymentMethod === "mercado_pago"
-                        ? "bg-[#2D7337] text-white"
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      ? "bg-[#2D7337] text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                       }`}
                   >
                     Mercado Pago
