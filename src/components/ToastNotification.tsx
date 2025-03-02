@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { CheckCircle, AlertTriangle, XCircle, X } from "lucide-react";
+import { notificationService } from "@/services/notificationService";
 
 export type ToastType = "success" | "error" | "warning";
 
@@ -112,6 +113,21 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     duration: 3000,
   });
 
+   // Suscribirse al servicio de notificaciones
+   useEffect(() => {
+    const unsubscribe = notificationService.subscribe((notification) => {
+      setToast({
+        message: notification.message,
+        type: notification.type,
+        isVisible: true,
+        duration: notification.duration || 3000,
+      });
+    });
+    
+    // Limpieza al desmontar
+    return unsubscribe;
+  }, []);
+
   const showToast = (message: string, type: ToastType, duration = 3000) => {
     setToast({
       message,
@@ -126,7 +142,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   return (
-    <ToastContext.Provider value={{ showToast, hideToast }}>
+    <>
       {children}
       <KwimiToast
         message={toast.message}
@@ -135,11 +151,11 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         onClose={hideToast}
         duration={toast.duration}
       />
-    </ToastContext.Provider>
+    </>
   );
 };
 
-export const useToast = () => {
+const useToast = () => {
   const context = React.useContext(ToastContext);
   if (context === undefined) {
     throw new Error("useToast must be used within a ToastProvider");

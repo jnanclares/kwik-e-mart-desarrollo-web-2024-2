@@ -8,7 +8,7 @@ import {
   User as FirebaseUser
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase/firebaseConfig';
+import { auth, db } from '../config/firebaseConfig';
 import { UserData } from '../models/user';
 import { AuthResponse, UserDataResponse } from '../models/auth';
 

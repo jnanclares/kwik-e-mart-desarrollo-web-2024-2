@@ -65,22 +65,10 @@ const AdminPage: React.FC = () => {
         </div>
     
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
-          {/* Product Distribution */}
-          <div className="lg:col-span-1 bg-white rounded-lg shadow-md border-t-4 border-green-500 overflow-hidden">
-            <div className="bg-green-500 px-4 py-3">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <ChevronRight className="w-5 h-5" />
-                Distribución por Categoría
-              </h2>
-            </div>
-            <div className="p-4">
-              <CategoryDistribution />
-            </div>
-          </div>
+        <div className="grid grid-cols-1 gap-6 relative z-10">
     
           {/* Products Table */}
-          <div className="lg:col-span-2 bg-white rounded-lg shadow-md border-t-4 border-blue-500 overflow-hidden">
+          <div className="bg-white rounded-lg shadow-md border-t-4 border-blue-500 overflow-hidden">
             <div className="bg-blue-500 px-4 py-3">
               <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                 <ChevronRight className="w-5 h-5" />

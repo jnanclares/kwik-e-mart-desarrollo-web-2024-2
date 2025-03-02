@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { AuthState } from '../models/auth';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../firebase/firebaseConfig';
+import { auth } from '../config/firebaseConfig';
 import { getUserData } from '../services/authService';
 import { User } from '@/models/user';
 

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/firebase/firebaseConfig';
+import { db } from '@/config/firebaseConfig';
 import { getUserData, ROLES } from '@/services/authService';
 import { UserWithId } from '@/models/user';
 import { Users, RefreshCw, ChevronRight, UserCheck, UserMinus } from 'lucide-react';
