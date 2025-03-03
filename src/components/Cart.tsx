@@ -258,8 +258,13 @@ export const Cart: React.FC = () => {
           
           {/* Diálogo de Confirmación para Vaciar Carrito */}
           {showConfirmDialog && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-60">
-              <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm">
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[100]">
+              <motion.div 
+                className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm relative z-[101]"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+              >
                 <h3 className="text-lg font-semibold mb-4">¿Vaciar el carrito?</h3>
                 <p className="text-gray-600 mb-4">Esta acción eliminará todos los productos del carrito.</p>
                 <div className="flex justify-center gap-4">
@@ -276,7 +281,7 @@ export const Cart: React.FC = () => {
                     Cancelar
                   </button>
                 </div>
-              </div>
+              </motion.div>
             </div>
           )}
         </>

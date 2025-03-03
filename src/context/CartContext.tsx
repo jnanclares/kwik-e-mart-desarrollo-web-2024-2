@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useEffect, useContext, useReducer } from "react";
+import React, { createContext, useEffect, useContext, useReducer, useRef } from "react";
 import { Product } from "../models/products";
 import { CartItem } from "../models/cart";
 import { STORE_CONFIG } from "../config/storeConfig";
@@ -9,6 +9,11 @@ import { notificationService } from "@/services/notificationService";
 interface CartState {
   items: CartItem[];
   isOpen: boolean;
+  // Añadimos esta propiedad para rastrear acciones que generarán notificaciones
+  lastAction: {
+    type: string;
+    payload?: any;
+  } | null;
 }
 
 export type CartAction =
@@ -21,6 +26,7 @@ export type CartAction =
 const initialState: CartState = {
   items: [],
   isOpen: false,
+  lastAction: null
 };
 
 // Helper para verificar si se puede añadir más unidades según stock y configuración global
@@ -47,7 +53,10 @@ const canAddMoreToCart = (
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  // Creamos un cartReducer que usa el hook de toast
+  // Referencia para almacenar el estado anterior
+  const prevItemsRef = useRef<CartItem[]>([]);
+  
+  // Creamos un cartReducer que NO usa notificationService directamente
   const cartReducer = (state: CartState, action: CartAction): CartState => {
     switch (action.type) {
       case "ADD_ITEM": {
@@ -60,8 +69,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         if (existingItem) {
           // El producto ya está en el carrito, verificar stock
           if (!canAddMoreToCart(product, existingItem.quantity, quantityToAdd)) {
-            // No se puede añadir más, ya se mostrará la alerta en el componente
-            return state;
+            // No se puede añadir más
+            return {
+              ...state,
+              lastAction: {
+                type: "ADD_ITEM_FAILED",
+                payload: { product, reason: "stock" }
+              }
+            };
           }
           
           // Actualizar cantidad
@@ -72,18 +87,32 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
                 ? { ...item, quantity: item.quantity + quantityToAdd }
                 : item
             ),
+            lastAction: {
+              type: "ADD_ITEM_SUCCESS",
+              payload: { product, quantity: quantityToAdd }
+            }
           };
         } else {
           // Nuevo producto, verificar stock
           if (!canAddMoreToCart(product, 0, quantityToAdd)) {
-            // No hay stock suficiente, ya se mostrará la alerta en el componente
-            return state;
+            // No hay stock suficiente
+            return {
+              ...state,
+              lastAction: {
+                type: "ADD_ITEM_FAILED",
+                payload: { product, reason: "stock" }
+              }
+            };
           }
           
           // Añadir al carrito
           return {
             ...state,
             items: [...state.items, { ...product, quantity: quantityToAdd }],
+            lastAction: {
+              type: "ADD_ITEM_SUCCESS",
+              payload: { product, quantity: quantityToAdd }
+            }
           };
         }
       }
@@ -92,14 +121,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         const productId = action.payload;
         const productToRemove = state.items.find(item => item.id === productId);
         
-        // Buscamos el producto para mostrar la notificación
-        if (productToRemove) {
-          notificationService.notify(`${productToRemove.name} eliminado del carrito`, "warning");
-        }
-        
         return {
           ...state,
           items: state.items.filter(item => item.id !== productId),
+          lastAction: {
+            type: "REMOVE_ITEM",
+            payload: productToRemove
+          }
         };
       }
       
@@ -111,49 +139,46 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         
         // Si la cantidad es 0 o negativa, eliminar el producto
         if (quantity <= 0) {
-          notificationService.notify(`${item.name} eliminado del carrito`, "warning");
-          
           return {
             ...state,
             items: state.items.filter(item => item.id !== id),
+            lastAction: {
+              type: "REMOVE_ITEM",
+              payload: item
+            }
           };
         }
         
         // Verificar si la nueva cantidad respeta el stock
         if (quantity > item.stock) {
-          notificationService.notify(`No puedes añadir más de ${item.stock} unidades de "${item.name}" (stock disponible).`, "warning");
-          
-          // Establecer la cantidad al máximo disponible
           return {
             ...state,
             items: state.items.map(item =>
               item.id === id ? { ...item, quantity: item.stock } : item
             ),
+            lastAction: {
+              type: "QUANTITY_LIMIT_STOCK",
+              payload: { item, requestedQuantity: quantity }
+            }
           };
         }
         
         // Verificar límite máximo global
         if (quantity > STORE_CONFIG.maxPurchaseLimit) {
-          notificationService.notify(`No puedes comprar más de ${STORE_CONFIG.maxPurchaseLimit} unidades de un mismo producto.`, "warning");
-          
-          // Establecer la cantidad al límite máximo
           return {
             ...state,
             items: state.items.map(item =>
               item.id === id ? { ...item, quantity: STORE_CONFIG.maxPurchaseLimit } : item
             ),
+            lastAction: {
+              type: "QUANTITY_LIMIT_MAX",
+              payload: { item, requestedQuantity: quantity }
+            }
           };
         }
         
-        // Validamos si está aumentando o disminuyendo la cantidad
-        const currentItem = state.items.find(item => item.id === id);
-        if (currentItem) {
-          if (quantity > currentItem.quantity) {
-            notificationService.notify(`Cantidad de ${item.name} aumentada a ${quantity}`, "success");
-          } else {
-            notificationService.notify(`Cantidad de ${item.name} reducida a ${quantity}`, "warning");
-          }
-        }
+        // La acción en lastAction indicará si aumentó o disminuyó
+        const actionType = quantity > item.quantity ? "QUANTITY_INCREASED" : "QUANTITY_DECREASED";
         
         // Actualizar cantidad normalmente
         return {
@@ -161,6 +186,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
           items: state.items.map(item =>
             item.id === id ? { ...item, quantity } : item
           ),
+          lastAction: {
+            type: actionType,
+            payload: { item, newQuantity: quantity, oldQuantity: item.quantity }
+          }
         };
       }
       
@@ -168,18 +197,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         return {
           ...state,
           isOpen: !state.isOpen,
+          lastAction: {
+            type: "TOGGLE_CART"
+          }
         };
         
       case "CLEAR_CART":
-        // Solo mostramos notificación si había elementos
-        if (state.items.length > 0) {
-          notificationService.notify("Se ha vaciado el carrito", "warning");
-        }
-        
         return {
           ...state,
           items: [],
           isOpen: false,
+          lastAction: {
+            type: "CLEAR_CART",
+            payload: { itemCount: state.items.length }
+          }
         };
         
       default:
@@ -189,6 +220,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   
   const [state, dispatch] = useReducer(cartReducer, initialState, initializer);
 
+  // Guardar el carrito en localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
@@ -198,6 +230,57 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     }
   }, [state]);
+
+  // Efecto para manejar notificaciones basadas en lastAction
+  useEffect(() => {
+    if (!state.lastAction) return;
+
+    const { type, payload } = state.lastAction;
+
+    switch (type) {
+      case "REMOVE_ITEM":
+        if (payload) {
+          notificationService.notify(`${payload.name} eliminado del carrito`, "warning");
+        }
+        break;
+      
+      case "CLEAR_CART":
+        if (payload && payload.itemCount > 0) {
+          notificationService.notify("Se ha vaciado el carrito", "warning");
+        }
+        break;
+        
+      case "QUANTITY_INCREASED":
+        notificationService.notify(
+          `Cantidad de ${payload.item.name} aumentada a ${payload.newQuantity}`, 
+          "success"
+        );
+        break;
+        
+      case "QUANTITY_DECREASED":
+        notificationService.notify(
+          `Cantidad de ${payload.item.name} reducida a ${payload.newQuantity}`, 
+          "warning"
+        );
+        break;
+        
+      case "QUANTITY_LIMIT_STOCK":
+        notificationService.notify(
+          `No puedes añadir más de ${payload.item.stock} unidades de "${payload.item.name}" (stock disponible).`, 
+          "warning"
+        );
+        break;
+        
+      case "QUANTITY_LIMIT_MAX":
+        notificationService.notify(
+          `No puedes comprar más de ${STORE_CONFIG.maxPurchaseLimit} unidades de un mismo producto.`, 
+          "warning"
+        );
+        break;
+      
+      // Añadir más casos según sea necesario
+    }
+  }, [state.lastAction]);
 
   return (
     <CartContext.Provider value={{ state, dispatch }}>
@@ -212,7 +295,11 @@ const initializer = (initialState: CartState) => {
     const storedState = localStorage.getItem("cartState");
     if (storedState) {
       try {
-        return JSON.parse(storedState);
+        const parsedState = JSON.parse(storedState);
+        return {
+          ...parsedState,
+          lastAction: null // Asegurar que lastAction es null al inicializar
+        };
       } catch (error) {
         console.error("Error parsing cart state:", error);
       }
