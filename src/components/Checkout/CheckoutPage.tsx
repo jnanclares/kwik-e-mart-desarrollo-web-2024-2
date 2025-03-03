@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { doc, updateDoc, arrayUnion } from "firebase/firestore";
+import { doc, updateDoc, arrayUnion, collection, addDoc } from "firebase/firestore";
 import { db } from "../../config/firebaseConfig"; // Adjust if needed
 
 import { useCart } from "../../context/CartContext";
@@ -231,48 +231,86 @@ export const CheckoutPage = () => {
   };
 
   // Dentro de processOrder:
-  const processOrder = async () => {
-    try {
-      const order: OrderDetails & { pay_method: string } = {
-        date: new Date().toISOString(),
-        items: cartState.items,
-        shipping,
-        tax,
-        total,
-        customer: authState.user?.name ?? "Cliente Anónimo",
-        pay_method: paymentMethod,
+  // Modificación para crear una transacción cuando se completa una compra
+
+// Primero, vamos a modificar la función processOrder para crear la transacción
+const processOrder = async () => {
+  try {
+    const order: OrderDetails & { pay_method: string } = {
+      date: new Date().toISOString(),
+      items: cartState.items,
+      shipping,
+      tax,
+      total,
+      customer: authState.user?.name ?? "Cliente Anónimo",
+      pay_method: paymentMethod,
+    };
+
+    // Guarda la orden en el estado local para mostrar la factura en la confirmación
+    setOrderDetails(order);
+
+    // Si el usuario está autenticado, actualiza su documento en Firestore
+    if (authState.user) {
+      const userRef = doc(db, "users", authState.user.id);
+      await updateDoc(userRef, {
+        purchaseHistory: arrayUnion(order),
+      });
+
+      // Actualiza el estado local incluyendo el campo "customer"
+      const updatedUser: User = {
+        ...authState.user,
+        purchaseHistory: [...authState.user.purchaseHistory, order],
       };
 
-      // Guarda la orden en el estado local para mostrar la factura en la confirmación
-      setOrderDetails(order);
-
-      // Si el usuario está autenticado, actualiza su documento en Firestore
-      if (authState.user) {
-        const userRef = doc(db, "users", authState.user.id);
-        await updateDoc(userRef, {
-          purchaseHistory: arrayUnion(order),
-        });
-
-        // Actualiza el estado local incluyendo el campo "customer"
-        const updatedUser: User = {
-          ...authState.user,
-          purchaseHistory: [...authState.user.purchaseHistory, order],
-        };
-
-        authDispatch({ type: "UPDATE_USER", payload: updatedUser });
-      }
-
-      // Limpia el carrito y pasa al paso de confirmación
-      cartDispatch({ type: "CLEAR_CART" });
-      setStep("confirmation");
-
-      // Añadir mensaje de éxito
-      notificationService.notify("¡Tu pedido ha sido procesado correctamente!", "success", 4000);
-    } catch (err) {
-      setError("Ocurrió un error al procesar tu orden. Por favor, intenta nuevamente.");
-      notificationService.notify("Error al procesar el pedido. Inténtalo de nuevo.", "error");
+      authDispatch({ type: "UPDATE_USER", payload: updatedUser });
     }
-  };
+
+    // NUEVO: Crear una transacción en la colección "transactions"
+    try {
+      const timestamp = new Date();
+      
+      // Transformar los items del carrito al formato esperado por la colección transactions
+      const productsList = cartState.items.map(item => ({
+        productId: item.id,
+        productName: item.name,
+        price: item.salePrice && item.salePrice < item.price ? item.salePrice : item.price,
+        quantity: item.quantity
+      }));
+      
+      // Crear la transacción
+      const transactionData = {
+        userId: authState.user?.id || 'anonymous',
+        userName: authState.user?.name || 'Cliente Anónimo',
+        userEmail: authState.user?.email || 'anonimo@example.com',
+        productsList,
+        totalAmount: total,
+        timestamp,
+        paymentMethod,
+        status: 'completed'
+      };
+      
+      // Añadir la transacción a Firestore
+      const transactionsRef = collection(db, "transactions");
+      await addDoc(transactionsRef, transactionData);
+      
+      console.log("Transacción creada correctamente");
+    } catch (transactionError) {
+      console.error("Error al crear la transacción:", transactionError);
+      // No interrumpimos el flujo principal si falla la creación de la transacción
+      // pero lo registramos para depuración
+    }
+
+    // Limpia el carrito y pasa al paso de confirmación
+    cartDispatch({ type: "CLEAR_CART" });
+    setStep("confirmation");
+
+    // Añadir mensaje de éxito
+    notificationService.notify("¡Tu pedido ha sido procesado correctamente!", "success", 4000);
+  } catch (err) {
+    setError("Ocurrió un error al procesar tu orden. Por favor, intenta nuevamente.");
+    notificationService.notify("Error al procesar el pedido. Inténtalo de nuevo.", "error");
+  }
+};
 
   if (cartState.items.length === 0 && step !== "confirmation") {
     return (
