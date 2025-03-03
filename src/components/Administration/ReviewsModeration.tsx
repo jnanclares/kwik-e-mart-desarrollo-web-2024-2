@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { db } from '../../firebase/firebaseConfig';
+import { db } from '@/config/firebaseConfig';
 import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { Trash2, Edit } from 'lucide-react';
 

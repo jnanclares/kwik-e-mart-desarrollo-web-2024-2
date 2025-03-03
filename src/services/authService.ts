@@ -36,8 +36,9 @@ export const signInWithGoogle = async (): Promise<AuthResponse> => {
         displayName: user.displayName || '',
         email: user.email || '',
         photoURL: user.photoURL || '',
-        role: ROLES.USER,  // Default role for Google users
-        createdAt: new Date()
+        role: ROLES.USER, // Default role for Google users
+        createdAt: new Date(),
+        purchaseHistory: []
       });
     }
     

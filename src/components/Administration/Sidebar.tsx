@@ -9,12 +9,14 @@ import {
   Tag,
   Store,
   MessageSquare,
-  ArrowLeft
+  ArrowLeft,
+  BarChart2 // Añadido para el icono de análisis de ventas
 } from 'lucide-react';
 
 const menuItems = [
   { icon: Package, label: 'Inventario', path: '/admin' },
   { icon: Users, label: 'Usuarios', path: '/admin/users' },
+  { icon: BarChart2, label: 'Análisis de Ventas', path: '/admin/sales' }, // Nuevo ítem para análisis de ventas
   { icon: Tag, label: 'Ofertas', path: '/admin/offers' },
   { icon: MessageSquare, label: 'Moderación de Reseñas', path: '/admin/reviews-moderation' },
 ];
