@@ -18,6 +18,32 @@ import {
   Product 
 } from '../../services/offers';
 
+// Función para formatear fechas en YYYY-MM-DD para inputs
+const formatDateForInput = (date: string | Date) => {
+  console.log(date);
+  if (!date) return '';
+  const d = new Date(date);
+  return !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : '';
+};
+
+// Función para formatear fechas en DD/MM/YYYY para visualización
+const formatDateForDisplay = (date: any) => {
+  if (!date) return '';
+
+  let d;
+
+  // Si es un objeto Timestamp de Firebase
+  if (typeof date === 'object' && date.seconds) {
+    d = new Date(date.seconds * 1000); // Convertir segundos a milisegundos
+  } else {
+    d = new Date(date);
+  }
+
+  return !isNaN(d.getTime())
+    ? d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    : '';
+};
+
 export default function OffersReport() {
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
@@ -62,8 +88,8 @@ export default function OffersReport() {
       originalPrice: offer.originalPrice,
       discountPercentage: offer.discountPercentage,
       salePrice: offer.salePrice,
-      startDate: new Date(offer.startDate).toISOString().split('T')[0],
-      endDate: new Date(offer.endDate).toISOString().split('T')[0],
+      startDate: formatDateForInput(offer.startDate),
+      endDate: formatDateForInput(offer.endDate),
       isActive: offer.isActive
     });
     setShowOfferModal(true);
@@ -98,8 +124,8 @@ export default function OffersReport() {
     try {
       const offerData = {
         ...formData,
-        startDate: new Date(formData.startDate),
-        endDate: new Date(formData.endDate)
+        startDate: new Date(formData.startDate).toISOString(),
+        endDate: new Date(formData.endDate).toISOString()
       };
 
       if (selectedOffer?.id) {
@@ -111,14 +137,7 @@ export default function OffersReport() {
       setShowOfferModal(false);
       setSelectedOffer(null);
       setFormData({
-        productId: '',
-        productName: '',
-        originalPrice: 0,
-        discountPercentage: 0,
-        salePrice: 0,
-        startDate: '',
-        endDate: '',
-        isActive: true
+        productId: '', productName: '', originalPrice: 0, discountPercentage: 0, salePrice: 0, startDate: '', endDate: '', isActive: true
       });
       await loadData();
     } catch (error) {
@@ -281,7 +300,7 @@ export default function OffersReport() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {new Date(offer.startDate).toLocaleDateString()} - {new Date(offer.endDate).toLocaleDateString()}
+                    {formatDateForDisplay(offer.startDate)} - {formatDateForDisplay(offer.endDate)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

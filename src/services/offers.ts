@@ -40,8 +40,8 @@ export interface Offer {
   originalPrice: number;
   discountPercentage: number;
   salePrice: number;
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
   isActive: boolean;
 }
 
