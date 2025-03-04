@@ -1,5 +1,5 @@
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
+import { db } from "../config/firebaseConfig";
 import { Product } from "../models/products";
 
 // 🔹 Múltiples ofertas por día de la semana
