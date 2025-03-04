@@ -1,6 +1,12 @@
 "use client";
 import React, { useState } from "react";
-import { doc, updateDoc, arrayUnion, collection, addDoc } from "firebase/firestore";
+import {
+  doc,
+  updateDoc,
+  arrayUnion,
+  collection,
+  addDoc,
+} from "firebase/firestore";
 import { db } from "../../config/firebaseConfig"; // Adjust if needed
 
 import { useCart } from "../../context/CartContext";
@@ -14,17 +20,19 @@ import {
   Minus,
   Trash2,
 } from "lucide-react";
-import { OrderDetails, PaymentDetails, ShippingDetails } from "@/models/checkout";
+import {
+  OrderDetails,
+  PaymentDetails,
+  ShippingDetails,
+} from "@/models/checkout";
 import { User } from "@/models/user";
 import { notificationService } from "@/services/notificationService";
-
 
 type PaymentMethod =
   | "card"
   | "transferencia"
   | "contraentrega"
   | "mercado_pago";
-
 
 const Invoice: React.FC<{ order: OrderDetails }> = ({ order }) => {
   return (
@@ -95,6 +103,7 @@ export const CheckoutPage = () => {
   const [rating, setRating] = useState<number>(5);
   const [comment, setComment] = useState("");
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [isOrderProcessing, setIsOrderProcessing] = useState(false);
 
   const [shippingDetails, setShippingDetails] = useState<ShippingDetails>({
     address: "",
@@ -115,12 +124,18 @@ export const CheckoutPage = () => {
   // Enviar review
   const handleSubmitReview = async () => {
     if (!reviewProductId || !comment.trim()) {
-      notificationService.notify("Por favor selecciona un producto y escribe una reseña.", "warning");
+      notificationService.notify(
+        "Por favor selecciona un producto y escribe una reseña.",
+        "warning"
+      );
       return;
     }
 
     if (!authState.user) {
-      notificationService.notify("Debes iniciar sesión para dejar una reseña.", "warning");
+      notificationService.notify(
+        "Debes iniciar sesión para dejar una reseña.",
+        "warning"
+      );
       return;
     }
 
@@ -144,10 +159,17 @@ export const CheckoutPage = () => {
       setRating(5);
 
       // Reemplazar el alert por el toast
-      notificationService.notify("¡Tu reseña ha sido enviada con éxito! Gracias por tu opinión.", "success", 4000);
+      notificationService.notify(
+        "¡Tu reseña ha sido enviada con éxito! Gracias por tu opinión.",
+        "success",
+        4000
+      );
     } catch (error) {
       console.error("Error al enviar reseña:", error);
-      notificationService.notify("Hubo un error al enviar tu reseña. Inténtalo de nuevo.", "error");
+      notificationService.notify(
+        "Hubo un error al enviar tu reseña. Inténtalo de nuevo.",
+        "error"
+      );
     }
   };
 
@@ -158,7 +180,7 @@ export const CheckoutPage = () => {
       (item.salePrice && item.salePrice < item.price
         ? item.salePrice
         : item.price) *
-      item.quantity,
+        item.quantity,
     0
   );
   const shipping = subtotal * 0.3;
@@ -174,13 +196,19 @@ export const CheckoutPage = () => {
       !shippingDetails.zipCode
     ) {
       setError("Por favor completa todos los campos de envío");
-      notificationService.notify("Por favor completa todos los campos de envío", "warning");
+      notificationService.notify(
+        "Por favor completa todos los campos de envío",
+        "warning"
+      );
       return;
     }
     const zipCodeRegex = /^\d{5,6}$/;
     if (!zipCodeRegex.test(shippingDetails.zipCode)) {
       setError("El código postal es inválido. Debe contener 5 o 6 dígitos.");
-      notificationService.notify("El código postal es inválido. Debe contener 5 o 6 dígitos.", "warning");
+      notificationService.notify(
+        "El código postal es inválido. Debe contener 5 o 6 dígitos.",
+        "warning"
+      );
       return;
     }
     setError(null);
@@ -227,90 +255,96 @@ export const CheckoutPage = () => {
       }
     }
     setError(null);
+    setIsOrderProcessing(true);
     processOrder();
   };
 
   // Dentro de processOrder:
   // Modificación para crear una transacción cuando se completa una compra
 
-// Primero, vamos a modificar la función processOrder para crear la transacción
-const processOrder = async () => {
-  try {
-    const order: OrderDetails & { pay_method: string } = {
-      date: new Date().toISOString(),
-      items: cartState.items,
-      shipping,
-      tax,
-      total,
-      customer: authState.user?.name ?? "Cliente Anónimo",
-      pay_method: paymentMethod,
-    };
-
-    // Guarda la orden en el estado local para mostrar la factura en la confirmación
-    setOrderDetails(order);
-
-    // Si el usuario está autenticado, actualiza su documento en Firestore
-    if (authState.user) {
-      const userRef = doc(db, "users", authState.user.id);
-      await updateDoc(userRef, {
-        purchaseHistory: arrayUnion(order),
-      });
-
-      // Actualiza el estado local incluyendo el campo "customer"
-      const updatedUser: User = {
-        ...authState.user,
-        purchaseHistory: [...authState.user.purchaseHistory, order],
-      };
-
-      authDispatch({ type: "UPDATE_USER", payload: updatedUser });
-    }
-
-    // NUEVO: Crear una transacción en la colección "transactions"
+  // Primero, vamos a modificar la función processOrder para crear la transacción
+  const processOrder = async () => {
     try {
-      const timestamp = new Date();
-      
-      // Transformar los items del carrito al formato esperado por la colección transactions
-      const productsList = cartState.items.map(item => ({
-        productId: item.id,
-        productName: item.name,
-        price: item.salePrice && item.salePrice < item.price ? item.salePrice : item.price,
-        quantity: item.quantity
-      }));
-      
-      // Crear la transacción
-      const transactionData = {
-        userId: authState.user?.id || 'anonymous',
-        userName: authState.user?.name || 'Cliente Anónimo',
-        userEmail: authState.user?.email || 'anonimo@example.com',
-        productsList,
-        totalAmount: total,
-        timestamp,
-        paymentMethod,
-        status: 'completed'
+      const order: OrderDetails & { pay_method: string } = {
+        date: new Date().toISOString(),
+        items: cartState.items,
+        shipping,
+        tax,
+        total,
+        customer: authState.user?.name ?? "Cliente Anónimo",
+        pay_method: paymentMethod,
       };
-      
-      // Añadir la transacción a Firestore
-      const transactionsRef = collection(db, "transactions");
-      await addDoc(transactionsRef, transactionData);
-      
-      console.log("Transacción creada correctamente");
-    } catch (transactionError) {
-      console.error("Error al crear la transacción:", transactionError);
-      // No interrumpimos el flujo principal si falla la creación de la transacción
-      // pero lo registramos para depuración
+
+      // Guarda la orden en el estado local para mostrar la factura en la confirmación
+      setOrderDetails(order);
+
+      // Si el usuario está autenticado, actualiza su documento en Firestore
+      if (authState.user) {
+        const userRef = doc(db, "users", authState.user.id);
+        await updateDoc(userRef, {
+          purchaseHistory: arrayUnion(order),
+        });
+
+        // Actualiza el estado local incluyendo el campo "customer"
+        const updatedUser: User = {
+          ...authState.user,
+          purchaseHistory: [...authState.user.purchaseHistory, order],
+        };
+
+        authDispatch({ type: "UPDATE_USER", payload: updatedUser });
+      }
+
+      // NUEVO: Crear una transacción en la colección "transactions"
+      try {
+        const timestamp = new Date();
+
+        // Transformar los items del carrito al formato esperado por la colección transactions
+        const productsList = cartState.items.map((item) => ({
+          productId: item.id,
+          productName: item.name,
+          price:
+            item.salePrice && item.salePrice < item.price
+              ? item.salePrice
+              : item.price,
+          quantity: item.quantity,
+        }));
+
+        // Crear la transacción
+        const transactionData = {
+          userId: authState.user?.id || "anonymous",
+          userName: authState.user?.name || "Cliente Anónimo",
+          userEmail: authState.user?.email || "anonimo@example.com",
+          productsList,
+          totalAmount: total,
+          timestamp,
+          paymentMethod,
+          status: "completed",
+        };
+
+        // Añadir la transacción a Firestore
+        const transactionsRef = collection(db, "transactions");
+        await addDoc(transactionsRef, transactionData);
+
+        console.log("Transacción creada correctamente");
+      } catch (transactionError) {
+        console.error("Error al crear la transacción:", transactionError);
+        // No interrumpimos el flujo principal si falla la creación de la transacción
+        // pero lo registramos para depuración
+      }
+
+      // Limpia el carrito y pasa al paso de confirmación
+      cartDispatch({ type: "CLEAR_CART" });
+      setStep("confirmation");
+
+      // Añadir mensaje de éxito
+      showToast("¡Tu pedido ha sido procesado correctamente!", "success", 4000);
+    } catch (err) {
+      setError(
+        "Ocurrió un error al procesar tu orden. Por favor, intenta nuevamente."
+      );
+      showToast("Error al procesar el pedido. Inténtalo de nuevo.", "error");
     }
-
-    // Limpia el carrito y pasa al paso de confirmación
-    cartDispatch({ type: "CLEAR_CART" });
-    setStep("confirmation");
-
-    // Añadir mensaje de éxito
-    notificationService.notify("¡Tu pedido ha sido procesado correctamente!", "success", 4000);
-  } catch (err) {
-    setError("Ocurrió un error al procesar tu orden. Por favor, intenta nuevamente.");
-    notificationService.notify("Error al procesar el pedido. Inténtalo de nuevo.", "error");
-  }
-};
+  };
 
   if (cartState.items.length === 0 && step !== "confirmation") {
     return (
@@ -322,9 +356,7 @@ const processOrder = async () => {
           Volver a la página principal
         </button>
         <ShoppingBag className="h-16 w-16 text-[#2D7337]" />
-        <h2
-          className="mt-4 text-2xl font-bold"
-        >
+        <h2 className="mt-4 text-2xl font-bold">
           ¡Ay caramba! Tu carrito está vacío.
         </h2>
         <p className="mt-2 text-lg text-[#2D7337]">
@@ -335,9 +367,7 @@ const processOrder = async () => {
   }
 
   return (
-    <div
-      className="min-h-screen bg-[#FDFDF2] relative px-4 sm:px-6 lg:px-8 py-12"
-    >
+    <div className="min-h-screen bg-[#FDFDF2] relative px-4 sm:px-6 lg:px-8 py-12">
       <button
         onClick={() => (window.location.href = "/")}
         className="fixed top-4 left-4 bg-[#2D7337] border-2 border-[#FED41D] text-white py-2 px-4 rounded-lg hover:bg-[#236129] transition-colors z-50"
@@ -448,40 +478,44 @@ const processOrder = async () => {
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("card")}
-                    className={`py-2 px-4 rounded-lg transition-colors ${paymentMethod === "card"
-                      ? "bg-[#2D7337] text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }`}
+                    className={`py-2 px-4 rounded-lg transition-colors ${
+                      paymentMethod === "card"
+                        ? "bg-[#2D7337] text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
                   >
                     Tarjeta
                   </button>
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("transferencia")}
-                    className={`py-2 px-4 rounded-lg transition-colors ${paymentMethod === "transferencia"
-                      ? "bg-[#2D7337] text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }`}
+                    className={`py-2 px-4 rounded-lg transition-colors ${
+                      paymentMethod === "transferencia"
+                        ? "bg-[#2D7337] text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
                   >
                     Transferencia
                   </button>
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("contraentrega")}
-                    className={`py-2 px-4 rounded-lg transition-colors ${paymentMethod === "contraentrega"
-                      ? "bg-[#2D7337] text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }`}
+                    className={`py-2 px-4 rounded-lg transition-colors ${
+                      paymentMethod === "contraentrega"
+                        ? "bg-[#2D7337] text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
                   >
                     Contraentrega
                   </button>
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("mercado_pago")}
-                    className={`py-2 px-4 rounded-lg transition-colors ${paymentMethod === "mercado_pago"
-                      ? "bg-[#2D7337] text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }`}
+                    className={`py-2 px-4 rounded-lg transition-colors ${
+                      paymentMethod === "mercado_pago"
+                        ? "bg-[#2D7337] text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
                   >
                     Mercado Pago
                   </button>
@@ -599,6 +633,7 @@ const processOrder = async () => {
                   <button
                     type="submit"
                     className="w-full bg-[#2D7337] text-white py-3 rounded-lg hover:bg-[#236129] transition-colors"
+                    disabled={isOrderProcessing}
                   >
                     Realizar Pedido
                   </button>
@@ -653,8 +688,9 @@ const processOrder = async () => {
                       <button
                         key={star}
                         onClick={() => setRating(star)}
-                        className={`text-2xl ${star <= rating ? "text-yellow-500" : "text-gray-300"
-                          }`}
+                        className={`text-2xl ${
+                          star <= rating ? "text-yellow-500" : "text-gray-300"
+                        }`}
                       >
                         ★
                       </button>
@@ -763,7 +799,7 @@ const processOrder = async () => {
                               {Math.round(
                                 ((originalPrice - discountedPrice) /
                                   originalPrice) *
-                                100
+                                  100
                               )}
                               %
                             </span>
