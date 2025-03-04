@@ -14,17 +14,19 @@ import {
   Minus,
   Trash2,
 } from "lucide-react";
-import { OrderDetails, PaymentDetails, ShippingDetails } from "@/models/checkout";
+import {
+  OrderDetails,
+  PaymentDetails,
+  ShippingDetails,
+} from "@/models/checkout";
 import { User } from "@/models/user";
-import { useToast } from '@/components/ToastNotification';
-
+import { useToast } from "@/components/ToastNotification";
 
 type PaymentMethod =
   | "card"
   | "transferencia"
   | "contraentrega"
   | "mercado_pago";
-
 
 const Invoice: React.FC<{ order: OrderDetails }> = ({ order }) => {
   return (
@@ -95,6 +97,7 @@ export const CheckoutPage = () => {
   const [rating, setRating] = useState<number>(5);
   const [comment, setComment] = useState("");
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [isOrderProcessing, setIsOrderProcessing] = useState(false);
 
   const [shippingDetails, setShippingDetails] = useState<ShippingDetails>({
     address: "",
@@ -116,7 +119,10 @@ export const CheckoutPage = () => {
   // Enviar review
   const handleSubmitReview = async () => {
     if (!reviewProductId || !comment.trim()) {
-      showToast("Por favor selecciona un producto y escribe una reseña.", "warning");
+      showToast(
+        "Por favor selecciona un producto y escribe una reseña.",
+        "warning"
+      );
       return;
     }
 
@@ -145,10 +151,17 @@ export const CheckoutPage = () => {
       setRating(5);
 
       // Reemplazar el alert por el toast
-      showToast("¡Tu reseña ha sido enviada con éxito! Gracias por tu opinión.", "success", 4000);
+      showToast(
+        "¡Tu reseña ha sido enviada con éxito! Gracias por tu opinión.",
+        "success",
+        4000
+      );
     } catch (error) {
       console.error("Error al enviar reseña:", error);
-      showToast("Hubo un error al enviar tu reseña. Inténtalo de nuevo.", "error");
+      showToast(
+        "Hubo un error al enviar tu reseña. Inténtalo de nuevo.",
+        "error"
+      );
     }
   };
 
@@ -159,7 +172,7 @@ export const CheckoutPage = () => {
       (item.salePrice && item.salePrice < item.price
         ? item.salePrice
         : item.price) *
-      item.quantity,
+        item.quantity,
     0
   );
   const shipping = subtotal * 0.3;
@@ -181,7 +194,10 @@ export const CheckoutPage = () => {
     const zipCodeRegex = /^\d{5,6}$/;
     if (!zipCodeRegex.test(shippingDetails.zipCode)) {
       setError("El código postal es inválido. Debe contener 5 o 6 dígitos.");
-      showToast("El código postal es inválido. Debe contener 5 o 6 dígitos.", "warning");
+      showToast(
+        "El código postal es inválido. Debe contener 5 o 6 dígitos.",
+        "warning"
+      );
       return;
     }
     setError(null);
@@ -228,6 +244,7 @@ export const CheckoutPage = () => {
       }
     }
     setError(null);
+    setIsOrderProcessing(true);
     processOrder();
   };
 
@@ -270,7 +287,9 @@ export const CheckoutPage = () => {
       // Añadir mensaje de éxito
       showToast("¡Tu pedido ha sido procesado correctamente!", "success", 4000);
     } catch (err) {
-      setError("Ocurrió un error al procesar tu orden. Por favor, intenta nuevamente.");
+      setError(
+        "Ocurrió un error al procesar tu orden. Por favor, intenta nuevamente."
+      );
       showToast("Error al procesar el pedido. Inténtalo de nuevo.", "error");
     }
   };
@@ -285,9 +304,7 @@ export const CheckoutPage = () => {
           Volver a la página principal
         </button>
         <ShoppingBag className="h-16 w-16 text-[#2D7337]" />
-        <h2
-          className="mt-4 text-2xl font-bold"
-        >
+        <h2 className="mt-4 text-2xl font-bold">
           ¡Ay caramba! Tu carrito está vacío.
         </h2>
         <p className="mt-2 text-lg text-[#2D7337]">
@@ -298,9 +315,7 @@ export const CheckoutPage = () => {
   }
 
   return (
-    <div
-      className="min-h-screen bg-[#FDFDF2] relative px-4 sm:px-6 lg:px-8 py-12"
-    >
+    <div className="min-h-screen bg-[#FDFDF2] relative px-4 sm:px-6 lg:px-8 py-12">
       <button
         onClick={() => (window.location.href = "/")}
         className="fixed top-4 left-4 bg-[#2D7337] border-2 border-[#FED41D] text-white py-2 px-4 rounded-lg hover:bg-[#236129] transition-colors z-50"
@@ -411,40 +426,44 @@ export const CheckoutPage = () => {
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("card")}
-                    className={`py-2 px-4 rounded-lg transition-colors ${paymentMethod === "card"
-                      ? "bg-[#2D7337] text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }`}
+                    className={`py-2 px-4 rounded-lg transition-colors ${
+                      paymentMethod === "card"
+                        ? "bg-[#2D7337] text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
                   >
                     Tarjeta
                   </button>
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("transferencia")}
-                    className={`py-2 px-4 rounded-lg transition-colors ${paymentMethod === "transferencia"
-                      ? "bg-[#2D7337] text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }`}
+                    className={`py-2 px-4 rounded-lg transition-colors ${
+                      paymentMethod === "transferencia"
+                        ? "bg-[#2D7337] text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
                   >
                     Transferencia
                   </button>
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("contraentrega")}
-                    className={`py-2 px-4 rounded-lg transition-colors ${paymentMethod === "contraentrega"
-                      ? "bg-[#2D7337] text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }`}
+                    className={`py-2 px-4 rounded-lg transition-colors ${
+                      paymentMethod === "contraentrega"
+                        ? "bg-[#2D7337] text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
                   >
                     Contraentrega
                   </button>
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("mercado_pago")}
-                    className={`py-2 px-4 rounded-lg transition-colors ${paymentMethod === "mercado_pago"
-                      ? "bg-[#2D7337] text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }`}
+                    className={`py-2 px-4 rounded-lg transition-colors ${
+                      paymentMethod === "mercado_pago"
+                        ? "bg-[#2D7337] text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
                   >
                     Mercado Pago
                   </button>
@@ -562,6 +581,7 @@ export const CheckoutPage = () => {
                   <button
                     type="submit"
                     className="w-full bg-[#2D7337] text-white py-3 rounded-lg hover:bg-[#236129] transition-colors"
+                    disabled={isOrderProcessing}
                   >
                     Realizar Pedido
                   </button>
@@ -616,8 +636,9 @@ export const CheckoutPage = () => {
                       <button
                         key={star}
                         onClick={() => setRating(star)}
-                        className={`text-2xl ${star <= rating ? "text-yellow-500" : "text-gray-300"
-                          }`}
+                        className={`text-2xl ${
+                          star <= rating ? "text-yellow-500" : "text-gray-300"
+                        }`}
                       >
                         ★
                       </button>
@@ -726,7 +747,7 @@ export const CheckoutPage = () => {
                               {Math.round(
                                 ((originalPrice - discountedPrice) /
                                   originalPrice) *
-                                100
+                                  100
                               )}
                               %
                             </span>
