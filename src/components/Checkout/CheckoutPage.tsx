@@ -337,12 +337,12 @@ export const CheckoutPage = () => {
       setStep("confirmation");
 
       // Añadir mensaje de éxito
-      showToast("¡Tu pedido ha sido procesado correctamente!", "success", 4000);
+      notificationService.notify("¡Tu pedido ha sido procesado correctamente!", "success");
     } catch (err) {
       setError(
         "Ocurrió un error al procesar tu orden. Por favor, intenta nuevamente."
       );
-      showToast("Error al procesar el pedido. Inténtalo de nuevo.", "error");
+      notificationService.notify("Error al procesar el pedido. Inténtalo de nuevo.", "error");
     }
   };
 
